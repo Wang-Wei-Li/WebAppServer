@@ -6,12 +6,12 @@
 
 ##### 1.個別商品資訊：
 - /product
-- /product/:id -> count++ to recommendation/:id
+- /product/:id -> count++
 > response:
 ```
 {
-  "is_success": Boolean,
-  "product_info": [ProductInfo],
+  "isSuccess": Boolean,
+  "productInfo": [ProductInfo],
   "cause": String
 }
 ```
@@ -21,8 +21,8 @@
 > response:
 ```
 {
-  "is_success": Boolean,
-  "product_info": [ProductInfo],
+  "isSuccess": Boolean,
+  "productInfo": [ProductInfo],
   "cause": String
 }
 ```
@@ -31,7 +31,8 @@
 > response:
 ```
 {
-  "comments":[String...]
+  "isSuccess": Boolean,
+  "comments": [String...]
 }
 ```
 ###### 4.圖片：
@@ -54,7 +55,7 @@ image.img
 > response:
 ```
 {
-  "is_success": Boolean,
+  "isSuccess": Boolean,
   "cause": String
 }
 ```
@@ -71,7 +72,7 @@ image.img
 > response:
 ```
 {
-  "is_success": Boolean,
+  "isSuccess": Boolean,
   "cause": String
 }
 ```
@@ -87,8 +88,8 @@ image.img
 > response:
 ```
 {
-  "is_success": Boolean,
-  "product_info": [ProductInfo],
+  "isSuccess": Boolean,
+  "productInfo": [ProductInfo],
   "cause": String
 }
 ```
@@ -103,8 +104,8 @@ image.img
 > response:
 ```
 {
-  "is_success": Boolean,
-  "product_info": [ProductInfo],
+  "isSuccess": Boolean,
+  "productInfo": [ProductInfo],
   "amount": Int
 }
 ```
@@ -120,7 +121,7 @@ image.img
 > response:
 ```
 {
-  "is_success": Boolean
+  "isSuccess": Boolean
 }
 ```
 ##### 6.送出購物車：
@@ -134,7 +135,7 @@ image.img
 > response:
 ```
 {
-  "is_success": Boolean,
+  "isSuccess": Boolean,
   "cause": String
 }
 ```
@@ -149,8 +150,8 @@ image.img
 > response:
 ```
 {
-  "is_success": Boolean,
-  "product_info": [ProductInfo],
+  "isSuccess": Boolean,
+  "productInfo": [ProductInfo],
   "amount": Int
 }
 ```
@@ -166,7 +167,7 @@ image.img
 > response:
 ```
 {
-  "is_success": Boolean
+  "isSuccess": Boolean
 }
 ```
 ### 二. request & response 格式
@@ -176,7 +177,7 @@ image.img
 {
   "account": String,
   "password": String,
-  "filters": [String…],
+  "filters": [String...],
   "products": [{id, amount}...],
   "comment": String
 }
@@ -184,8 +185,8 @@ image.img
 ##### response format
 ```
 {
-  "is_success": Boolean,
-  "product_info": [ProductInfo]
+  "isSuccess": Boolean,
+  "productInfo": [ProductInfo]
   "amount": Int,
   "cause": String,
   "comments": [String...]
