@@ -1,7 +1,7 @@
 import express from "express";
 import getResponseCreator from "./response.js";
 import getProductInfoCreator from "./productInfo.js";
-import fs from "fs"
+import fs from "fs";
 
 const app = express();
 const PORT = 3000;
