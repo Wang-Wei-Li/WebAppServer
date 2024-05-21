@@ -52,7 +52,26 @@ app.get("/product/:id", (req, res) => {
   res.send(result);
 });
 
-app.get("/product/image/:id", (req, res) => {});
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
+const moduleURL = import.meta.url;
+const filePath = fileURLToPath(moduleURL);
+const directoryPath = dirname(filePath);
+
+app.get("/product/image/:id", (req, res) => {
+  const productId = req.params.id;
+  const imageRoute = directoryPath + `/data/image-${productId}.png`;
+
+  if(fs.existsSync(imageRoute)) {
+    res.sendFile(imageRoute, (err) => {
+      if(err) {
+        console.log("Error of Sending File: ", err);
+      }
+    });
+  } else {
+    res.send("File does not exist.");
+  }
+});
 
 app.get("/recommendation", (req, res) => {});
 
