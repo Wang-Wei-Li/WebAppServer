@@ -14,6 +14,8 @@ const productRoutePrefix = "./data/product-";
 const productRouteSuffix = ".json";
 
 // GET
+
+/** GET /product **/
 app.get("/product", (req, res) => {
   const products = JSON.parse(fs.readFileSync(productsRoute));
   const responseCreator = getResponseCreator();
@@ -30,7 +32,9 @@ app.get("/product", (req, res) => {
   const result = responseCreator.getResponse();
   res.send(result);
 });
+/** GET /product **/
 
+/** GET /product/:id **/
 app.get("/product/:id", (req, res) => {
   const productId = req.params.id;
   const responseCreator = getResponseCreator();
@@ -51,7 +55,9 @@ app.get("/product/:id", (req, res) => {
   const result = responseCreator.getResponse();
   res.send(result);
 });
+/** GET /product/:id **/
 
+/** GET /product/image:id **/
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
 const moduleURL = import.meta.url;
@@ -72,6 +78,7 @@ app.get("/product/image/:id", (req, res) => {
     res.send("File does not exist.");
   }
 });
+/** GET /product/image:id **/
 
 app.get("/recommendation", (req, res) => {});
 
