@@ -5,7 +5,10 @@ import fs from "fs";
 
 const app = express();
 const PORT = 3000;
+const fs = require('fs');
+const cors = require('cors'); // for cross-origin requests, could be removed if not needed
 
+app.use(cors()); // for cross-origin requests, could be removed if not needed
 app.use(express.urlencoded({extended: true}));
 app.use(express.json());
 
@@ -84,12 +87,61 @@ app.get("/recommendation", (req, res) => {});
 
 app.get("/recommendation/:rank", (req, res) => {});
 
-app.get("/comment/:id", (req, res) => {});
+app.get("/comment/:id", (req, res) => {
+  const { id } = req.params;
+  const path = `./comment-${id}.json`;
+
+  try {
+    const data = fs.readFileSync(path, "utf8");
+    const comments = JSON.parse(data);
+    const cArray = Object.values(comments); // Convert object to array
+    res.status(200).json({ isSuccess: true, comments: cArray });
+  } catch (err) {
+    res.status(404).json({ isSuccess: false, cause: "No comments found." });
+  }
+});
 
 // POST
-app.post("/register", (req, res) => {});
+app.post("/register", (req, res) => {
+  const { account, password } = req.body;
+  const path = "./accounts.json";
 
-app.post("/login", (req, res) => {});
+  try {
+    const data = fs.readFileSync(path, "utf8");
+    const accountsData = JSON.parse(data);
+
+    // Check if account exists
+    if (accountsData[account]) {
+      return res.status(400).json({ isSuccess: false, cause: "Account already exists." });
+    }
+
+    // Register new account
+    accountsData[account] = password;
+    fs.writeFileSync(path, JSON.stringify(accountsData));
+    res.status(201).json({ isSuccess: true });
+  } catch (err) {
+    res.status(500).json({ isSuccess: false, cause: "Internal server error." });
+  }
+});
+
+app.post("/login", (req, res) => {
+  const { account, password } = req.body;
+  const path = "./accounts.json";
+
+  try {
+    const data = fs.readFileSync(path, "utf8");
+    const accountsData = JSON.parse(data);
+    
+    // Check if the account exists and the password matches
+    if (accountsData[account] && accountsData[account] === password) {
+      return res.status(200).json({ isSuccess: true });
+    } else {
+      return res.status(401).json({ isSuccess: false, cause: "Wrong account or password." });
+    }    
+  } catch (err) {
+    res.status(500).json({ isSuccess: false, cause: "Internal server error." });
+  }
+});
 
 app.post("/product", (req, res) => {});
 
@@ -101,7 +153,37 @@ app.post("/cart/change/:account", (req, res) => {});
 
 app.post("/cart/submit/:account", (req, res) => {});
 
-app.post("/comment/:account/:id", (req, res) => {});
+app.post("/comment/:account/:id", (req, res) => {
+  const { account, id } = req.params;
+  const { comment } = req.body;
+  const path = `./comment-${id}.json`;
+
+  if (!comment) {
+    return res.status(400).json({ isSuccess: false, cause: "Comment cannot be empty." });
+  }
+
+  try {
+    try {
+      const data = fs.readFileSync(path, "utf8");
+      let comments = JSON.parse(data); // Load existing comments if file exists
+    } catch (err) {
+      let comments = {};
+    }
+
+    // Check if the account has commented before
+    if (comments[account]) {
+      return res.status(400).json({ isSuccess: false, cause: "Account has commented before." });
+    }
+
+    // Add new comment
+    comments[account] = comment;
+
+    fs.writeFileSync(path, JSON.stringify(comments));
+    res.status(201).json({ isSuccess: true });
+  } catch (err) {
+    res.status(500).json({ isSuccess: false, cause: "Internal server error." });
+  }
+});
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);

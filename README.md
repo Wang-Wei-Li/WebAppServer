@@ -44,7 +44,7 @@ image.img
 #### /post/
 
 ##### 1.註冊:
-- /register
+- /register -> accounts.json
 > request:
 ```
 {
