@@ -31,7 +31,26 @@ app.get("/product", (req, res) => {
   res.send(result);
 });
 
-app.get("/product/:id", (req, res) => {});
+app.get("/product/:id", (req, res) => {
+  const productId = req.params.id;
+  const responseCreator = getResponseCreator();
+  const productRoute = productRoutePrefix + productId + productRouteSuffix;
+
+  let productInfos = [];
+  if(fs.existsSync(productRoute)) {
+    responseCreator.setIsSuccess(true);
+
+    const productInfo = JSON.parse(fs.readFileSync(productRoute));
+    productInfos.push(productInfo);
+  } else {
+    responseCreator.setIsSuccess(false);
+    responseCreator.setCause("File does not exist.");
+  }
+  responseCreator.setProductInfos(productInfos);
+
+  const result = responseCreator.getResponse();
+  res.send(result);
+});
 
 app.get("/product/image/:id", (req, res) => {});
 
