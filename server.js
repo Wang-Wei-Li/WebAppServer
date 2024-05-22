@@ -2,11 +2,10 @@ import express from "express";
 import getResponseCreator from "./response.js";
 import getProductInfoCreator from "./productInfo.js";
 import fs from "fs";
+import cors from "cors"; // for cross-origin requests, could be removed if not needed
 
 const app = express();
 const PORT = 3000;
-const fs = require('fs');
-const cors = require('cors'); // for cross-origin requests, could be removed if not needed
 
 app.use(cors()); // for cross-origin requests, could be removed if not needed
 app.use(express.urlencoded({extended: true}));
@@ -15,6 +14,11 @@ app.use(express.json());
 const productsRoute = "./data/products.json";
 const productRoutePrefix = "./data/product-";
 const productRouteSuffix = ".json";
+
+const commentsRoutePrefix = "./data/comment-";
+const commentsRouteSuffix = ".json";
+
+const accountsRoute = "./data/accounts.json";
 
 // GET
 
@@ -87,60 +91,75 @@ app.get("/recommendation", (req, res) => {});
 
 app.get("/recommendation/:rank", (req, res) => {});
 
+/** GET /comment/:id **/
 app.get("/comment/:id", (req, res) => {
-  const { id } = req.params;
-  const path = `./comment-${id}.json`;
+  const productId = req.params.id;
+  const responseCreator = getResponseCreator();
+  const commentRoute = commentsRoutePrefix + productId + commentsRouteSuffix;
 
-  try {
-    const data = fs.readFileSync(path, "utf8");
-    const comments = JSON.parse(data);
-    const cArray = Object.values(comments); // Convert object to array
-    res.status(200).json({ isSuccess: true, comments: cArray });
-  } catch (err) {
-    res.status(404).json({ isSuccess: false, cause: "No comments found." });
+  let commentArray = [];
+  if(fs.existsSync(commentRoute)) {
+    responseCreator.setIsSuccess(true);
+
+    const comments = JSON.parse(fs.readFileSync(commentRoute));
+    commentArray = Object.values(comments); // Convert object to array
+  } else {
+    responseCreator.setIsSuccess(false);
+    responseCreator.setCause("File does not exist.");
   }
+  responseCreator.setComments(commentArray);
+
+  const result = responseCreator.getResponse();
+  res.send(result);
 });
 
 // POST
 app.post("/register", (req, res) => {
   const { account, password } = req.body;
-  const path = "./accounts.json";
+  const responseCreator = getResponseCreator();
 
-  try {
-    const data = fs.readFileSync(path, "utf8");
-    const accountsData = JSON.parse(data);
+  if (fs.existsSync(accountsRoute)) {
+    const accountsData = JSON.parse(fs.readFileSync(accountsRoute));
 
-    // Check if account exists
     if (accountsData[account]) {
-      return res.status(400).json({ isSuccess: false, cause: "Account already exists." });
+      responseCreator.setIsSuccess(false);
+      responseCreator.setCause("Account already exists.");
+    } else {
+      accountsData[account] = password;
+      fs.writeFileSync(accountsRoute, JSON.stringify(accountsData));
+      responseCreator.setIsSuccess(true);
     }
-
-    // Register new account
-    accountsData[account] = password;
-    fs.writeFileSync(path, JSON.stringify(accountsData));
-    res.status(201).json({ isSuccess: true });
-  } catch (err) {
-    res.status(500).json({ isSuccess: false, cause: "Internal server error." });
+  } else { // if accounts.json does not exist
+    const createAccountsJson = {};
+    createAccountsJson[account] = password;
+    fs.writeFileSync(accountsRoute, JSON.stringify(createAccountsJson));
+    responseCreator.setIsSuccess(true);
   }
+
+  const result = responseCreator.getResponse();
+  res.send(result);
 });
 
 app.post("/login", (req, res) => {
   const { account, password } = req.body;
-  const path = "./accounts.json";
+  const responseCreator = getResponseCreator();
 
-  try {
-    const data = fs.readFileSync(path, "utf8");
-    const accountsData = JSON.parse(data);
-    
-    // Check if the account exists and the password matches
+  if (fs.existsSync(accountsRoute)) {
+    const accountsData = JSON.parse(fs.readFileSync(accountsRoute));
+
     if (accountsData[account] && accountsData[account] === password) {
-      return res.status(200).json({ isSuccess: true });
+      responseCreator.setIsSuccess(true);
     } else {
-      return res.status(401).json({ isSuccess: false, cause: "Wrong account or password." });
-    }    
-  } catch (err) {
-    res.status(500).json({ isSuccess: false, cause: "Internal server error." });
+      responseCreator.setIsSuccess(false);
+      responseCreator.setCause("Wrong account or password.");
+    }
+  } else { // if accounts.json does not exist
+    responseCreator.setIsSuccess(false);
+    responseCreator.setCause("File does not exist.");
   }
+
+  const result = responseCreator.getResponse();
+  res.send(result);
 });
 
 app.post("/product", (req, res) => {});
@@ -156,33 +175,34 @@ app.post("/cart/submit/:account", (req, res) => {});
 app.post("/comment/:account/:id", (req, res) => {
   const { account, id } = req.params;
   const { comment } = req.body;
-  const path = `./comment-${id}.json`;
+  const responseCreator = getResponseCreator();
+  const commentRoute = commentsRoutePrefix + id + commentsRouteSuffix;
 
   if (!comment) {
-    return res.status(400).json({ isSuccess: false, cause: "Comment cannot be empty." });
+    responseCreator.setIsSuccess(false);
+    responseCreator.setCause("Comment cannot be empty.");
+  } else {
+    if (fs.existsSync(commentRoute)) {
+      const comments = JSON.parse(fs.readFileSync(commentRoute));
+
+      if (comments[account]) {
+        responseCreator.setIsSuccess(false);
+        responseCreator.setCause("Account has commented before.");
+      } else {
+        comments[account] = comment;
+        fs.writeFileSync(commentRoute, JSON.stringify(comments));
+        responseCreator.setIsSuccess(true);
+      }
+    } else {
+      const createCommentsJson = {};
+      createCommentsJson[account] = comment;
+      fs.writeFileSync(commentRoute, JSON.stringify(createCommentsJson));
+      responseCreator.setIsSuccess(true);
+    }
   }
 
-  try {
-    try {
-      const data = fs.readFileSync(path, "utf8");
-      let comments = JSON.parse(data); // Load existing comments if file exists
-    } catch (err) {
-      let comments = {};
-    }
-
-    // Check if the account has commented before
-    if (comments[account]) {
-      return res.status(400).json({ isSuccess: false, cause: "Account has commented before." });
-    }
-
-    // Add new comment
-    comments[account] = comment;
-
-    fs.writeFileSync(path, JSON.stringify(comments));
-    res.status(201).json({ isSuccess: true });
-  } catch (err) {
-    res.status(500).json({ isSuccess: false, cause: "Internal server error." });
-  }
+  const result = responseCreator.getResponse();
+  res.send(result);
 });
 
 app.listen(PORT, () => {

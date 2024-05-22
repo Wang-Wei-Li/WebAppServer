@@ -32,7 +32,8 @@
 ```
 {
   "isSuccess": Boolean,
-  "comments": [String...]
+  "comments": [String...],
+  "cause": String
 }
 ```
 ###### 4.圖片：
