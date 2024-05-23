@@ -11,7 +11,7 @@
 ```
 {
   "isSuccess": Boolean,
-  "productInfo": [ProductInfo],
+  "productInfos": [ProductInfo],
   "cause": String
 }
 ```
@@ -22,7 +22,7 @@
 ```
 {
   "isSuccess": Boolean,
-  "productInfo": [ProductInfo],
+  "productInfos": [ProductInfo],
   "cause": String
 }
 ```
@@ -90,7 +90,7 @@ image.img
 ```
 {
   "isSuccess": Boolean,
-  "productInfo": [ProductInfo],
+  "productInfos": [ProductInfo],
   "cause": String
 }
 ```
@@ -106,7 +106,7 @@ image.img
 ```
 {
   "isSuccess": Boolean,
-  "productInfo": [ProductInfo],
+  "productInfos": [ProductInfo],
   "amount": Int
 }
 ```
@@ -116,7 +116,7 @@ image.img
 ```
 {
   "password": String,
-  "products": [{id, amount}...]
+  "products": [{id: String, amount: Int}...]
 }
 ```
 > response:
@@ -152,7 +152,7 @@ image.img
 ```
 {
   "isSuccess": Boolean,
-  "productInfo": [ProductInfo],
+  "productInfos": [ProductInfo],
   "amount": Int
 }
 ```
@@ -187,7 +187,7 @@ image.img
 ```
 {
   "isSuccess": Boolean,
-  "productInfo": [ProductInfo]
+  "productInfos": [ProductInfo]
   "amount": Int,
   "cause": String,
   "comments": [String...]
