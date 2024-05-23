@@ -287,7 +287,42 @@ app.post("/cart/:account", (req, res) => {
 
 app.post("/purchased/:account", (req, res) => {});
 
-app.post("/cart/change/:account", (req, res) => {});
+app.post("/cart/change/:account", (req, res) => {
+  const account = req.params.account;
+  const cartRoute = cartRoutePrefix + account + cartRouteSuffix;
+  const { password, products } = req.body;
+  const responseCreator = getResponseCreator();
+
+  const accounts = JSON.parse(fs.readFileSync(accountsRoute));
+  if((account in accounts) && accounts[account] === password) {
+    responseCreator.setIsSuccess(true);
+    
+    let cart = {};
+    if(fs.existsSync(cartRoute)) {
+      cart = JSON.parse(fs.readFileSync(cartRoute));
+    }
+    
+    for(const { id, amount } of products) {
+      if(id in cart) {
+        cart[id] += amount;
+      } else {
+        cart[id] = amount;
+      }
+    }
+
+    fs.writeFile(cartRoute, JSON.stringify(cart), (err) => {
+      if(err) {
+        console.log(err);
+      }
+    });
+  } else {
+    responseCreator.setIsSuccess(false);
+    responseCreator.setCause("Wrong account or password.");
+  }
+
+  const result = responseCreator.getResponse();
+  res.send(result);
+});
 
 app.post("/cart/submit/:account", (req, res) => {});
 
