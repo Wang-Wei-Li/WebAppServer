@@ -97,7 +97,7 @@ app.get("/recommendation", (req, res) => {
   let recommendationInfos = [];
   if (fs.existsSync(recommendationsRoute)) {
     const recommendations = JSON.parse(fs.readFileSync(recommendationsRoute));
-    recommendationArray = Object.keys(recommendations); // Convert object to array
+    recommendationArray = Object.values(recommendations); // Convert object to array
     for (const productId of recommendationArray) {
       const recommendationInfo = JSON.parse(fs.readFileSync(productRoutePrefix + productId + productRouteSuffix));
       recommendationInfos.push(recommendationInfo);
@@ -114,7 +114,35 @@ app.get("/recommendation", (req, res) => {
 });
 /** GET /recommendation **/
 
-app.get("/recommendation/:rank", (req, res) => {});
+/** GET /recommendation/:rank **/
+app.get("/recommendation/:rank", (req, res) => {
+  const rank = req.params.rank;
+  const responseCreator = getResponseCreator();
+
+  const recommendations = JSON.parse(fs.readFileSync(recommendationsRoute));
+
+  if (rank in recommendations) {  // Check if the rank is a valid key in the recommendations object
+    const productId = recommendations[rank];
+    const productRoute = productRoutePrefix + productId + productRouteSuffix;
+    let productInfos = [];
+    if (fs.existsSync(productRoute)) {
+      responseCreator.setIsSuccess(true);
+      const productInfo = JSON.parse(fs.readFileSync(productRoute));
+      productInfos.push(productInfo);
+    } else {
+      responseCreator.setIsSuccess(false);
+      responseCreator.setCause("File does not exist.");
+    }
+    responseCreator.setProductInfos(productInfos);
+  } else {
+    responseCreator.setIsSuccess(false);
+    responseCreator.setCause("Invalid rank.");
+  }
+
+  const result = responseCreator.getResponse();
+  res.send(result);
+});
+/** GET /recommendation/:rank **/
 
 /** GET /comment/:id **/
 app.get("/comment/:id", (req, res) => {
