@@ -20,6 +20,8 @@ const commentsRouteSuffix = ".json";
 
 const accountsRoute = "./data/accounts.json";
 
+const recommendationsRoute = "./data/recommendations.json";
+
 // GET
 
 /** GET /product **/
@@ -87,7 +89,30 @@ app.get("/product/image/:id", (req, res) => {
 });
 /** GET /product/image:id **/
 
-app.get("/recommendation", (req, res) => {});
+/** GET /recommendation **/
+app.get("/recommendation", (req, res) => {
+  const responseCreator = getResponseCreator();
+
+  let recommendationArray = [];
+  let recommendationInfos = [];
+  if (fs.existsSync(recommendationsRoute)) {
+    const recommendations = JSON.parse(fs.readFileSync(recommendationsRoute));
+    recommendationArray = Object.keys(recommendations); // Convert object to array
+    for (const productId of recommendationArray) {
+      const recommendationInfo = JSON.parse(fs.readFileSync(productRoutePrefix + productId + productRouteSuffix));
+      recommendationInfos.push(recommendationInfo);
+    }
+    responseCreator.setIsSuccess(true);
+    responseCreator.setProductInfos(recommendationInfos);
+  } else {
+    responseCreator.setIsSuccess(false);
+    responseCreator.setCause("Recommandations.json does not exist.");
+  }
+
+  const result = responseCreator.getResponse();
+  res.send(result);
+});
+/** GET /recommendation **/
 
 app.get("/recommendation/:rank", (req, res) => {});
 

@@ -196,12 +196,12 @@ image.img
 ##### ProductInfo
 ```
 {
-  "id": String,
+  "id": String,                 // unique for each product
   "name": String,
   "author": String,
   "summary": String,
-  "available": Int,
-  "categories":  [String...]
+  "amount": Int,                // available amount
+  "categories":  [String...]    // array
 }
 ```
 
@@ -251,7 +251,7 @@ see ProductInfo
   ...
 }
 ```
-- recommandation.json -> array
+- recommandations.json -> array
 ```
 {
   "id": order,
