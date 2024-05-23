@@ -215,7 +215,41 @@ app.post("/login", (req, res) => {
   res.send(result);
 });
 
-app.post("/product", (req, res) => {});
+app.post("/product", (req, res) => {
+  const { filters } = req.body;
+  
+  const products = JSON.parse(fs.readFileSync(productsRoute));
+  const responseCreator = getResponseCreator();
+
+  responseCreator.setIsSuccess(true);
+
+  let productInfos = [];
+  for(const productId of products) {
+    const productInfo = JSON.parse(fs.readFileSync(productRoutePrefix + productId + productRouteSuffix));
+
+    let matchAllFilters = true;
+    for(const filter of filters) {
+      let match = false;
+      for(const category of productInfo.categories) {
+        if(filter == category) {
+          match = true;
+          break;
+        }
+      }
+      if(!match) {
+        matchAllFilters = false;
+        break;
+      }
+    }
+    if(matchAllFilters) {
+      productInfos.push(productInfo);
+    }
+  }
+  responseCreator.setProductInfos(productInfos);
+
+  const result = responseCreator.getResponse();
+  res.send(result);
+});
 
 app.post("/cart/:account", (req, res) => {});
 
