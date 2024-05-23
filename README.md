@@ -179,7 +179,7 @@ image.img
   "account": String,
   "password": String,
   "filters": [String...],
-  "products": [{id, amount}...],
+  "products": [{id: String, amount: Int}...]
   "comment": String
 }
 ```
