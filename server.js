@@ -15,13 +15,6 @@ const productsRoute = "./data/products.json";
 const productRoutePrefix = "./data/product-";
 const productRouteSuffix = ".json";
 
-const commentsRoutePrefix = "./data/comment-";
-const commentsRouteSuffix = ".json";
-
-const accountsRoute = "./data/accounts.json";
-
-const recommendationsRoute = "./data/recommendations.json";
-
 // GET
 
 /** GET /product **/
@@ -89,6 +82,8 @@ app.get("/product/image/:id", (req, res) => {
 });
 /** GET /product/image:id **/
 
+const recommendationsRoute = "./data/recommendations.json";
+
 /** GET /recommendation **/
 app.get("/recommendation", (req, res) => {
   const responseCreator = getResponseCreator();
@@ -144,6 +139,9 @@ app.get("/recommendation/:rank", (req, res) => {
 });
 /** GET /recommendation/:rank **/
 
+const commentsRoutePrefix = "./data/comment-";
+const commentsRouteSuffix = ".json";
+
 /** GET /comment/:id **/
 app.get("/comment/:id", (req, res) => {
   const productId = req.params.id;
@@ -165,21 +163,26 @@ app.get("/comment/:id", (req, res) => {
   const result = responseCreator.getResponse();
   res.send(result);
 });
+/** GET /comment/:id **/
+
+const accountsRoute = "./data/accounts.json";
 
 // POST
+
+/** POST /register **/
 app.post("/register", (req, res) => {
   const { account, password } = req.body;
   const responseCreator = getResponseCreator();
 
   if (fs.existsSync(accountsRoute)) {
-    const accountsData = JSON.parse(fs.readFileSync(accountsRoute));
+    const accounts = JSON.parse(fs.readFileSync(accountsRoute));
 
-    if (accountsData[account]) {
+    if (account in accounts) {
       responseCreator.setIsSuccess(false);
       responseCreator.setCause("Account already exists.");
     } else {
-      accountsData[account] = password;
-      fs.writeFileSync(accountsRoute, JSON.stringify(accountsData));
+      accounts[account] = password;
+      fs.writeFileSync(accountsRoute, JSON.stringify(accounts));
       responseCreator.setIsSuccess(true);
     }
   } else { // if accounts.json does not exist
@@ -192,15 +195,17 @@ app.post("/register", (req, res) => {
   const result = responseCreator.getResponse();
   res.send(result);
 });
+/** POST /register **/
 
+/** POST /login **/
 app.post("/login", (req, res) => {
   const { account, password } = req.body;
   const responseCreator = getResponseCreator();
 
   if (fs.existsSync(accountsRoute)) {
-    const accountsData = JSON.parse(fs.readFileSync(accountsRoute));
+    const accounts = JSON.parse(fs.readFileSync(accountsRoute));
 
-    if (accountsData[account] && accountsData[account] === password) {
+    if (account in accounts && accounts[account] === password) {
       responseCreator.setIsSuccess(true);
     } else {
       responseCreator.setIsSuccess(false);
@@ -214,7 +219,9 @@ app.post("/login", (req, res) => {
   const result = responseCreator.getResponse();
   res.send(result);
 });
+/** POST /login **/
 
+/** POST /product **/
 app.post("/product", (req, res) => {
   const { filters } = req.body;
   
@@ -250,10 +257,12 @@ app.post("/product", (req, res) => {
   const result = responseCreator.getResponse();
   res.send(result);
 });
+/** POST /product **/
 
 const cartRoutePrefix = "./data/cart-";
 const cartRouteSuffix = ".json";
 
+/** POST /cart/:account **/
 app.post("/cart/:account", (req, res) => {
   const account = req.params.account;
   const cartRoute = cartRoutePrefix + account + cartRouteSuffix;
@@ -284,9 +293,53 @@ app.post("/cart/:account", (req, res) => {
   const result = responseCreator.getResponse();
   res.send(result);
 });
+/** POST /cart/:account **/
 
-app.post("/purchased/:account", (req, res) => {});
+const purchasedRoutePrefix = "./data/purchased-";
+const purchasedRouteSuffix = ".json";
 
+/** POST /purchased/:account **/
+app.post("/purchased/:account", (req, res) => {
+  const account = req.params.account;
+  const { password } = req.body;
+  const responseCreator = getResponseCreator();
+
+  let productInfos = [];
+  if (fs.existsSync(accountsRoute)) {
+    const accounts = JSON.parse(fs.readFileSync(accountsRoute));
+    if (account in accounts && accounts[account] === password) {
+      const purchasedRoute = purchasedRoutePrefix + account + purchasedRouteSuffix;
+      if (fs.existsSync(purchasedRoute)) {
+        const purchasedItems = JSON.parse(fs.readFileSync(purchasedRoute));
+        for (const productId in purchasedItems) {
+          const productRoute = productRoutePrefix + productId + productRouteSuffix;
+          if (fs.existsSync(productRoute)) {
+            const productInfo = JSON.parse(fs.readFileSync(productRoute));
+            productInfo.amount = purchasedItems[productId];  // Set the purchased amount for the product
+            productInfos.push(productInfo);
+          }
+        }
+        responseCreator.setIsSuccess(true);
+      } else {
+        responseCreator.setIsSuccess(false);
+        responseCreator.setCause("No purchase records found.");
+      }
+    } else {
+      responseCreator.setIsSuccess(false);
+      responseCreator.setCause("Wrong account or password.");
+    }
+  } else {
+    responseCreator.setIsSuccess(false);
+    responseCreator.setCause("File does not exist.");
+  }
+  responseCreator.setProductInfos(productInfos);
+
+  const result = responseCreator.getResponse();
+  res.send(result);
+});
+/** POST /purchased/:account **/
+
+/** POST /cart/change/:account **/
 app.post("/cart/change/:account", (req, res) => {
   const account = req.params.account;
   const cartRoute = cartRoutePrefix + account + cartRouteSuffix;
@@ -323,9 +376,11 @@ app.post("/cart/change/:account", (req, res) => {
   const result = responseCreator.getResponse();
   res.send(result);
 });
+/** POST /cart/change/:account **/
 
 app.post("/cart/submit/:account", (req, res) => {});
 
+/** POST /comment/:account/:id **/
 app.post("/comment/:account/:id", (req, res) => {
   const { account, id } = req.params;
   const { comment } = req.body;
@@ -354,10 +409,10 @@ app.post("/comment/:account/:id", (req, res) => {
       responseCreator.setIsSuccess(true);
     }
   }
-
   const result = responseCreator.getResponse();
   res.send(result);
 });
+/** POST /comment/:account/:id **/
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);

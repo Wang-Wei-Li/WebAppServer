@@ -126,7 +126,7 @@ image.img
 }
 ```
 ##### 6.送出購物車：
-- /cart/submit/:account -> check product amount -> 更新 /purchased/:account
+- /cart/submit/:account -> check product amount -> 更新 purchased-\<account\>.json
 > request:
 ```
 {
@@ -152,12 +152,11 @@ image.img
 ```
 {
   "isSuccess": Boolean,
-  "productInfos": [ProductInfo],
-  "amount": Int
+  "productInfos": [ProductInfo] // 此處 ProductInfo.amount 紀錄的是該商品的已購買數量
 }
 ```
 ##### 8.寫評論：
-- /comment/:account/:id -> 更新 comment
+- /comment/:account/:id -> 更新 comment-\<id\>.json
 > request:
 ```
 {
@@ -219,14 +218,14 @@ image.img
   ...
 }
 ```
-- cart-<account>.json
+- cart-\<account\>.json
 ```
 {
   "id": amount,
   ...
 }
 ```
-- purchased-<account>.json
+- purchased-\<account\>.json
 ```
 {
   "id": amount,
@@ -240,11 +239,11 @@ image.img
   ...
 }
 ```
-- product-<id>.json
+- product-\<id\>.json
 ```
 see ProductInfo
 ```
-- comment-<id>.json -> array
+- comment-\<id\>.json -> array
 ```
 {
   "account": comment,
@@ -265,6 +264,6 @@ see ProductInfo
 }
 ```
 ##### IMAGE files
-> image-<id>.img
+> image-\<id\>.img
 
 ##### P.S: 我們將 image 的 request 獨立出來，這樣 response 的格式會比較單純。
