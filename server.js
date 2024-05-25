@@ -378,7 +378,81 @@ app.post("/cart/change/:account", (req, res) => {
 });
 /** POST /cart/change/:account **/
 
-app.post("/cart/submit/:account", (req, res) => {});
+/** POST /cart/submit/:account **/
+app.post("/cart/submit/:account", (req, res) => {
+  const account = req.params.account;
+  const cartRoute = cartRoutePrefix + account + cartRouteSuffix;
+  const { password } = req.body;
+  const responseCreator = getResponseCreator();
+
+  if (fs.existsSync(accountsRoute)) { // Check if accounts.json exists
+    const accounts = JSON.parse(fs.readFileSync(accountsRoute));
+    if (account in accounts && accounts[account] === password) { // Check if the account and password are correct
+      if (fs.existsSync(cartRoute)) { // Check if the cart file exists
+        const cart = JSON.parse(fs.readFileSync(cartRoute));
+
+        let isBought = true;
+        let boughtItems = {};
+
+        for (const productId in cart) { // Check if there is enough amount for each product
+          let productRoute = productRoutePrefix + productId + productRouteSuffix;
+          if (fs.existsSync(productRoute)) {
+            let productInfo = JSON.parse(fs.readFileSync(productRoute));
+            if (productInfo.amount >= cart[productId]) {
+              boughtItems[productId] = cart[productId];
+            } else {
+              responseCreator.setIsSuccess(false);
+              responseCreator.setCause("Some products in the cart are out of stock.");
+              isBought = false;
+              break;
+            }
+          } else {
+            responseCreator.setIsSuccess(false);
+            responseCreator.setCause("Some products in the cart do not exist.");
+            isBought = false;
+            break;
+          }
+        }
+
+        if (isBought) {
+          const purchasedRoute = purchasedRoutePrefix + account + purchasedRouteSuffix;
+          const purchasedItems = fs.existsSync(purchasedRoute) ? JSON.parse(fs.readFileSync(purchasedRoute)) : {};
+
+          for (const productId in boughtItems) {  // Update the purchased items
+            let productRoute = productRoutePrefix + productId + productRouteSuffix;
+            let productInfo = JSON.parse(fs.readFileSync(productRoute));
+            productInfo.amount -= boughtItems[productId];
+            fs.writeFileSync(productRoute, JSON.stringify(productInfo));
+
+            if (productId in purchasedItems) {
+              purchasedItems[productId] += boughtItems[productId];
+            } else {
+              purchasedItems[productId] = boughtItems[productId];
+            }
+          }
+
+          fs.writeFileSync(purchasedRoute, JSON.stringify(purchasedItems));
+          responseCreator.setIsSuccess(true);
+
+          fs.unlinkSync(cartRoute);
+        }
+      } else {
+        responseCreator.setIsSuccess(false);
+        responseCreator.setCause("Cart file does not exist.");
+      }
+    } else {
+      responseCreator.setIsSuccess(false);
+      responseCreator.setCause("Wrong account or password.");
+    }
+  } else {
+    responseCreator.setIsSuccess(false);
+    responseCreator.setCause("Account file does not exist.");
+  }
+
+  const result = responseCreator.getResponse();
+  res.send(result);
+});
+/** POST /cart/submit/:account **/
 
 /** POST /comment/:account/:id **/
 app.post("/comment/:account/:id", (req, res) => {

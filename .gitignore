@@ -1,9 +1,9 @@
 node_modules
 package-lock.json
 index.html
-server(async).js
 data/product-001.json
 data/product-002.json
 data/product-009.json
 data/recommendations.json
 data/purchased-account1.json
+data/cart-account1.json
