@@ -6,7 +6,7 @@
 
 ##### 1.個別商品資訊：
 - /product
-- /product/:id -> count++
+- /product/:id -> viewcounts.json
 > response:
 ```
 {
@@ -178,7 +178,7 @@ image.img
   "account": String,
   "password": String,
   "filters": [String...],
-  "products": [{id: String, amount: Int}...]
+  "products": [{id: String, amount: Int}...],
   "comment": String
 }
 ```
@@ -186,7 +186,7 @@ image.img
 ```
 {
   "isSuccess": Boolean,
-  "productInfos": [ProductInfo]
+  "productInfos": [ProductInfo],
   "amount": Int,
   "cause": String,
   "comments": [String...]
@@ -205,7 +205,7 @@ image.img
 }
 ```
 
-### 三. 預計建立的 files 名及其格式
+### 三. 需要建立的 files 名及其格式
 
 ##### JS files
 - server.js
@@ -251,7 +251,7 @@ see ProductInfo
   ...
 }
 ```
-- recommandations.json -> array
+- recommendations.json -> array
 ```
 {
   "order": id,
@@ -261,9 +261,16 @@ see ProductInfo
 - cause.json -> array
 ```
 {
-  "cause": cause
+  "cause": cause,
+  ...
 }
 ```
+- viewcounts.json (killed every midnight)
+```
+{
+  "id": counts,
+  ...
+}
 ##### IMAGE files
 > image-\<id\>.img
 
