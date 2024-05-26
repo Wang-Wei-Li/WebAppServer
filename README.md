@@ -197,6 +197,7 @@ image.img
 {
   "id": String,                 // unique for each product
   "name": String,
+  "price": Int,
   "author": String,
   "summary": String,
   "amount": Int,                // available amount

@@ -1,7 +1,8 @@
 class ProductInfo {
-  constructor(id, name, author, summary, amount, categories) {
+  constructor(id, name, price, author, summary, amount, categories) {
     this.id = id;                 // unique for each product
     this.name = name;
+    this.price = price;
     this.author = author;
     this.summary = summary;
     this.amount = amount;         // available amount
@@ -13,6 +14,7 @@ class ProductInfoCreator {
   constructor() {
     this.id = null;
     this.name = null;
+    this.price = null;
     this.author = null;
     this.summary = null;
     this.amount = null;
@@ -24,6 +26,9 @@ class ProductInfoCreator {
   }
   setName(name) {
     this.name = name;
+  }
+  setPrice(price) {
+    this.price = price;
   }
   setAuthor(author) {
     this.author = author;
@@ -39,7 +44,7 @@ class ProductInfoCreator {
   }
 
   getProductInfo() {
-    return new ProductInfo(this.id, this.name, this.author, this.summary, this.amount, this.categories);
+    return new ProductInfo(this.id, this.name, this.price, this.author, this.summary, this.amount, this.categories);
   }
 
   static getCreator() {
