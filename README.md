@@ -205,13 +205,13 @@ image.img
 }
 ```
 
-### 三. 需要建立的 files 名及其格式 (Contributed by 組員 楊孟翰)
+### 三. 需要建立的 files 名及其格式
 
 ##### JS files
 - server.js
 - adjustproduct.js
 
-##### JSON files
+##### JSON files (Contributed by 組員 楊孟翰)
 - accounts.json
 ```
 {

@@ -271,6 +271,7 @@ app.post("/login", (req, res) => {
 
     if (account in accounts && accounts[account] === password) {
       responseCreator.setIsSuccess(true);
+      responseCreator.setCause("Done");
     } else {
       responseCreator.setIsSuccess(false);
       responseCreator.setCause("Wrong account or password.");
