@@ -205,7 +205,7 @@ image.img
 }
 ```
 
-### 三. 需要建立的 files 名及其格式
+### 三. 需要建立的 files 名及其格式 (Contributed by 組員 楊孟翰)
 
 ##### JS files
 - server.js

@@ -1,0 +1,9 @@
+{
+  "id": "104",                 
+  "name": "LONDON TRAVEL GUIDE: Your Ultimate Companion to Exploring London",
+  "price":510, 
+  "author": "Michael J. Walk",
+  "summary": "Whether you want to tread the footsteps of kings and queens in the royal palaces, take a break from sightseeing in one of the city's many parks, or sample a tantalizing array of street food from around the world, your LONDON TRAVEL GUIDE makes sure you experience all that London has to offer.",
+  "amount": 15,                
+  "categories":["travel","european","england","london"] 
+}

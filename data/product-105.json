@@ -1,0 +1,9 @@
+{
+  "id": "105",                 
+  "name": "《Down and Out in Paris and London》",
+  "price":210, 
+  "author": "George Orwell",
+  "summary": "From the author of 1984, the classic semi-autobiographical story about the adventures of a penniless British writer in two cities.Down and Out in Paris and London follows the journey of a writer among the down-and-out in two great cities. Without self-pity and often with humor, this novel is Orwell at his finest—a sobering, truthful protrayal of poverty and society.",
+  "amount": 10,                
+  "categories":["travel","european","france","paris"]      
+}

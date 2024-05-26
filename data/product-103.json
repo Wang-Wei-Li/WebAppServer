@@ -1,0 +1,9 @@
+{
+  "id": "103",                 
+  "name": "Lonely Planet Tokyo (Travel Guide)",
+  "price":705, 
+  "author": "Winnie Tan",
+  "summary": "Lonely Planet's local travel experts reveal all you need to know to plan the trip of a lifetime to Tokyo.",
+  "amount": 20,                
+  "categories":["travel","japan","tokyo"]    
+}
