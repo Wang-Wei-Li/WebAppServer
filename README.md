@@ -214,68 +214,68 @@ image.img
 - adjustproduct.js (maybe)
 
 ##### JSON files (Contributed by 組員 楊孟翰)
-- /data/accounts.json
+- accounts.json
 ```
 {
   "account": password,
   ...
 }
 ```
-- /data/cart-\<account\>.json
+- cart-\<account\>.json
 ```
 {
   "id": amount,
   ...
 }
 ```
-- /data/purchased-\<account\>.json 
+- purchased-\<account\>.json 
 ```
 {
   "id": amount,
   ...
 }
 ```
-- /data/products.json
+- products.json
 ```
 {
   "id": amount,
   ...
 }
 ```
-- /data/archived/products.json (管理下架的 product)
+- archived/products.json (管理下架的 product)
 ```
 {
   "id", "YYYY-MM-DD",
   ...
 }
 ```
-- /data/product-\<id\>.json
-- /data/archived/product-\<id\>.json (保留下架的 product 使購買紀錄能正確顯示)
+- product-\<id\>.json
+- archived/product-\<id\>.json (保留下架的 product 使購買紀錄能正確顯示)
 ```
 see ProductInfo
 ```
-- /data/comment-\<id\>.json
+- comment-\<id\>.json
 ```
 {
   "account": comment,
   ...
 }
 ```
-- /data/recommendations.json
+- recommendations.json
 ```
 {
   "order": id,
   ...
 }
 ```
-- /data/cause.json -> array
+- cause.json -> array
 ```
 {
   "cause": cause,
   ...
 }
 ```
-- /data/viewcounts.json (killed periodically)
+- viewcounts.json (killed periodically)
 ```
 {
   "id": counts,
@@ -286,3 +286,9 @@ see ProductInfo
 > image-\<id\>.img
 
 ##### P.S: 我們將 image 的 request 獨立出來，這樣 response 的格式會比較單純。
+
+### 四、檔案管理：
+1. accounts.json 和 products.json 必須存在且格式正確 (可為空 Object) <br>
+2. 所有 productID in products.json 都必須有相對應的 product-\<id\>.json
+3. 所有 account in accounts.json 都必須有相對應的 purchased-\<account\>.json
+4. 每日午夜手動刪除 viewcounts.json，並用前三多 counts 的 productID 更新 recommendations.json
