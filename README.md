@@ -106,8 +106,8 @@ image.img
 ```
 {
   "isSuccess": Boolean,
-  "productInfos": [ProductInfo],
-  "amount": Int
+  "productInfos": [ProductInfo] // 此處 ProductInfo.amount 紀錄的是該商品加入購物車的數量
+  "cause": String
 }
 ```
 ##### 5.購物車商品數量增減：

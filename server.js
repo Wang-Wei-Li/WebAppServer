@@ -16,7 +16,7 @@ function parseJsonFile(route, responseCreator, res) {
       return JSON.parse(fs.readFileSync(route));
   } catch (error) {
       responseCreator.setIsSuccess(false);
-      responseCreator.setCause("Error parsing JSON file. Please contact backend developers.");
+      responseCreator.setCause("Error parsing JSON file.");
       const result = responseCreator.getResponse();
       res.send(result); // Send response from within the function
       return null; // Return null to indicate failure
@@ -37,6 +37,7 @@ app.get("/product", (req, res) => {
   if (fs.existsSync(productsRoute)) {
     const products = parseJsonFile(productsRoute, responseCreator, res);
     if(!products) return;
+
     const productsArray = Object.keys(products);
     for(const productId of productsArray) {
       let productRoute = productRoutePrefix + productId + productRouteSuffix;
@@ -46,13 +47,14 @@ app.get("/product", (req, res) => {
         productInfos.push(productInfo);
       } else {
         responseCreator.setCause("Some products do not exist. Please remind backend developers.");
+        
       }
     }
+
     responseCreator.setIsSuccess(true);
-    responseCreator.setCause("Done");
   } else {
     responseCreator.setIsSuccess(false);
-    responseCreator.setCause(`${productsRoute} does not exist. Please contact backend developers.`);
+    responseCreator.setCause(`${productsRoute} does not exist.`);
   }
   responseCreator.setProductInfos(productInfos);
 
@@ -75,7 +77,6 @@ app.get("/product/:id", (req, res) => {
     if(!productInfo) return;
     productInfos.push(productInfo);
     responseCreator.setIsSuccess(true);
-    responseCreator.setCause("Done");
 
     if(fs.existsSync(viewcountsRoute)) {
       const viewcounts = parseJsonFile(viewcountsRoute, responseCreator, res);
@@ -89,7 +90,7 @@ app.get("/product/:id", (req, res) => {
     }
   } else {
     responseCreator.setIsSuccess(false);
-    responseCreator.setCause(`${productRoute} does not exist. Please contact backend developers.`);
+    responseCreator.setCause(`${productRoute} does not exist.`);
   }
   responseCreator.setProductInfos(productInfos);
 
@@ -141,7 +142,7 @@ app.get("/recommendation", (req, res) => {
         recommendationInfos.push(recommendationInfo);
       } else {
         responseCreator.setIsSuccess(false);
-        responseCreator.setCause(`${productRoute} does not exist. Please contact backend developers.`);
+        responseCreator.setCause(`${productRoute} does not exist.`);
         isRecommendationsValid = false;
         break;
       }
@@ -149,13 +150,12 @@ app.get("/recommendation", (req, res) => {
 
     if (isRecommendationsValid) {
       responseCreator.setIsSuccess(true);
-      responseCreator.setCause("Done");
     } else {
       recommendationInfos = [];
     }
   } else { 
     responseCreator.setIsSuccess(false);
-    responseCreator.setCause(`${recommendationsRoute} does not exist. Please contact backend developers.`);
+    responseCreator.setCause(`${recommendationsRoute} does not exist.`);
   }
   responseCreator.setProductInfos(recommendationInfos);
 
@@ -181,10 +181,9 @@ app.get("/recommendation/:rank", (req, res) => {
         if (!productInfo) return;
         productInfos.push(productInfo);
         responseCreator.setIsSuccess(true);
-        responseCreator.setCause("Done");
       } else {
         responseCreator.setIsSuccess(false);
-        responseCreator.setCause(`${productRoute} does not exist. Please contact backend developers.`);
+        responseCreator.setCause(`${productRoute} does not exist.`);
       }
     } else {
       responseCreator.setIsSuccess(false);
@@ -192,7 +191,7 @@ app.get("/recommendation/:rank", (req, res) => {
     }
   } else {
     responseCreator.setIsSuccess(false);
-    responseCreator.setCause(`${recommendationsRoute} does not exist. Please contact backend developers.`);
+    responseCreator.setCause(`${recommendationsRoute} does not exist.`);
   }
   responseCreator.setProductInfos(productInfos);
 
@@ -216,7 +215,6 @@ app.get("/comment/:id", (req, res) => {
     if(!comments) return;
     commentArray = Object.values(comments); // Convert object to array
     responseCreator.setIsSuccess(true);
-    responseCreator.setCause("Done");
   } else {
     responseCreator.setIsSuccess(false);
     responseCreator.setCause("No comments yet.");
@@ -248,11 +246,10 @@ app.post("/register", (req, res) => {
       accounts[account] = password;
       fs.writeFileSync(accountsRoute, JSON.stringify(accounts));
       responseCreator.setIsSuccess(true);
-      responseCreator.setCause("Done");
     }
   } else { // if accounts.json does not exist
     responseCreator.setIsSuccess(false);
-    responseCreator.setCause(`${accountsRoute} does not exist. Please contact backend developers.`);
+    responseCreator.setCause(`${accountsRoute} does not exist.`);
   }
 
   const result = responseCreator.getResponse();
@@ -271,14 +268,13 @@ app.post("/login", (req, res) => {
 
     if (account in accounts && accounts[account] === password) {
       responseCreator.setIsSuccess(true);
-      responseCreator.setCause("Done");
     } else {
       responseCreator.setIsSuccess(false);
       responseCreator.setCause("Wrong account or password.");
     }
   } else { // if accounts.json does not exist
     responseCreator.setIsSuccess(false);
-    responseCreator.setCause("File does not exist.");
+    responseCreator.setCause(`${accountsRoute} does not exist.`);
   }
 
   const result = responseCreator.getResponse();
@@ -289,39 +285,51 @@ app.post("/login", (req, res) => {
 /** POST /product **/
 app.post("/product", (req, res) => {
   const { filters } = req.body;
-  
-  const products = parseJsonFile(productsRoute, responseCreator, res);
-  if(!products) return;
   const responseCreator = getResponseCreator();
 
-  responseCreator.setIsSuccess(true);
-
-  let productInfos = [];
-  for(const productId of products) {
-    const productRoute = productRoutePrefix + productId + productRouteSuffix;
-    const productInfo = parseJsonFile(productRoute, responseCreator, res);
-    if(!productInfo) return;
+  if (fs.existsSync(productsRoute)) {
+    const products = parseJsonFile(productsRoute, responseCreator, res);
+    if(!products) return;
     
-    let matchAllFilters = true;
-    for(const filter of filters) {
-      let match = false;
-      for(const category of productInfo.categories) {
-        if(filter == category) {
-          match = true;
-          break;
+    let productInfos = [];
+
+    const productsArray = Object.keys(products);
+    for(const productId of productsArray) {
+      let productRoute = productRoutePrefix + productId + productRouteSuffix;
+      if (fs.existsSync(productRoute)) {
+        let productInfo = parseJsonFile(productRoute, responseCreator, res);
+        if(!productInfo) return;
+        
+        let matchAllFilters = true;
+        for(const filter of filters) {
+          let match = false;
+          for(const category of productInfo["categories"]) {
+            if(filter == category) {
+              match = true;
+              break;
+            }
+          }
+          
+          if(!match) {
+            matchAllFilters = false;
+            break;
+          }
         }
-      }
-      if(!match) {
-        matchAllFilters = false;
-        break;
+        
+        if(matchAllFilters) {
+          productInfos.push(productInfo);
+        }
+      } else {
+        responseCreator.setCause("Some products do not exist. Please remind backend developers.");
       }
     }
-    if(matchAllFilters) {
-      productInfos.push(productInfo);
-    }
+    responseCreator.setIsSuccess(true);
+  } else {
+    responseCreator.setIsSuccess(false);
+    responseCreator.setCause(`${productsRoute} does not exist.`);
   }
   responseCreator.setProductInfos(productInfos);
-
+  
   const result = responseCreator.getResponse();
   res.send(result);
 });
@@ -333,34 +341,49 @@ const cartRouteSuffix = ".json";
 /** POST /cart/:account **/
 app.post("/cart/:account", (req, res) => {
   const account = req.params.account;
-  const cartRoute = cartRoutePrefix + account + cartRouteSuffix;
   const { password } = req.body;
   const responseCreator = getResponseCreator();
 
-  const accounts = parseJsonFile(accountsRoute, responseCreator, res);
-  if (!accounts) return;
-  if((account in accounts) && accounts[account] === password) {
-    responseCreator.setIsSuccess(true);
-
-    let productInfos = [];
-    if(fs.existsSync(cartRoute)) {
-      const cart = parseJsonFile(cartRoute, responseCreator, res);
-      if (!cart) return;
-
-      for(let productId in cart) {
-        let productRoute = productRoutePrefix + productId + productRouteSuffix;
-        let productInfo = parseJsonFile(productRoute, responseCreator, res);
-        if (!productInfo) return;
-
-        productInfo["amount"] = cart[productId];
-        productInfos.push(productInfo);
+  let productInfos = [];
+  if (fs.existsSync(accountsRoute)) {
+    const accounts = parseJsonFile(accountsRoute, responseCreator, res);
+    if (!accounts) return;
+    
+    if((account in accounts) && accounts[account] === password) {
+      const cartRoute = cartRoutePrefix + account + cartRouteSuffix;
+      if(fs.existsSync(cartRoute)) {
+        const cart = parseJsonFile(cartRoute, responseCreator, res);
+        if (!cart) return;
+        
+        let allProductsExist = true;
+        const cartArray = Object.keys(cart);
+        for(const productId of cartArray) {
+          let productRoute = productRoutePrefix + productId + productRouteSuffix;
+          if (fs.existsSync(productRoute)) {
+            let productInfo = parseJsonFile(productRoute, responseCreator, res);
+            if (!productInfo) return;
+            productInfo["amount"] = cart[productId];
+            productInfos.push(productInfo);
+          } else {
+            responseCreator.setCause(`${productRoute} does not exist.`);
+            allProductsExist = false;
+            break;
+          }
+        }
+        responseCreator.setIsSuccess(allProductsExist);
+      } else {
+        responseCreator.setIsSuccess(false);
+        responseCreator.setCause(`${cartRoute} does not exist.`);
       }
+    } else {
+      responseCreator.setIsSuccess(false);
+      responseCreator.setCause("Wrong account or password.");
     }
-    responseCreator.setProductInfos(productInfos);
   } else {
     responseCreator.setIsSuccess(false);
-    responseCreator.setCause("Wrong account or password.");
+    responseCreator.setCause(`${accountsRoute} does not exist.`);
   }
+  responseCreator.setProductInfos(productInfos);
 
   const result = responseCreator.getResponse();
   res.send(result);
