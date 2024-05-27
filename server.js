@@ -71,8 +71,7 @@ app.get("/product", (req, res) => {
   }
   responseCreator.setProductInfos(productInfos);
 
-  const result = responseCreator.getResponse();
-  res.send(result);
+return res.send(responseCreator.getResponse());
 });
 /** GET /product **/
 
@@ -109,8 +108,7 @@ app.get("/product/:id", (req, res) => {
   }
   responseCreator.setProductInfos(productInfos);
 
-  const result = responseCreator.getResponse();
-  res.send(result);
+return res.send(responseCreator.getResponse());
 });
 /** GET /product/:id **/
 
@@ -151,8 +149,7 @@ app.get("/recommendation", (req, res) => {
   }
   responseCreator.setProductInfos(recommendationInfos);
 
-  const result = responseCreator.getResponse();
-  res.send(result);
+return res.send(responseCreator.getResponse());
 });
 /** GET /recommendation **/
 
@@ -187,8 +184,7 @@ app.get("/recommendation/:rank", (req, res) => {
   }
   responseCreator.setProductInfos(productInfos);
 
-  const result = responseCreator.getResponse();
-  res.send(result);
+return res.send(responseCreator.getResponse());
 });
 /** GET /recommendation/:rank **/
 
@@ -213,8 +209,7 @@ app.get("/comment/:id", (req, res) => {
   }
   responseCreator.setComments(commentArray);
 
-  const result = responseCreator.getResponse();
-  res.send(result);
+return res.send(responseCreator.getResponse());
 });
 /** GET /comment/:id **/
 
@@ -269,8 +264,7 @@ app.post("/register", (req, res) => {
     responseCreator.setCause(`${accountsRoute} does not exist.`);
   }
 
-  const result = responseCreator.getResponse();
-  res.send(result);
+return res.send(responseCreator.getResponse());
 });
 /** POST /register **/
 
@@ -294,8 +288,7 @@ app.post("/login", (req, res) => {
     responseCreator.setCause(`${accountsRoute} does not exist.`);
   }
 
-  const result = responseCreator.getResponse();
-  res.send(result);
+return res.send(responseCreator.getResponse());
 });
 /** POST /login **/
 
@@ -347,8 +340,7 @@ app.post("/product", (req, res) => {
   }
   responseCreator.setProductInfos(productInfos);
   
-  const result = responseCreator.getResponse();
-  res.send(result);
+return res.send(responseCreator.getResponse());
 });
 /** POST /product **/
 
@@ -403,8 +395,7 @@ app.post("/cart/:account", (req, res) => {
   }
   responseCreator.setProductInfos(productInfos);
 
-  const result = responseCreator.getResponse();
-  res.send(result);
+return res.send(responseCreator.getResponse());
 });
 /** POST /cart/:account **/
 
@@ -458,8 +449,7 @@ app.post("/cart/change/:account", (req, res) => {
     responseCreator.setCause(`${accountsRoute} does not exist.`);
   }
 
-  const result = responseCreator.getResponse();
-  res.send(result);
+return res.send(responseCreator.getResponse());
 });
 /** POST /cart/change/:account **/
 
@@ -522,8 +512,7 @@ app.post("/purchased/:account", (req, res) => {
   }
   responseCreator.setProductInfos(productInfos);
 
-  const result = responseCreator.getResponse();
-  res.send(result);
+return res.send(responseCreator.getResponse());
 });
 /** POST /purchased/:account **/
 
@@ -610,8 +599,7 @@ app.post("/cart/submit/:account", (req, res) => {
   fs.unlinkSync(cartRoute); // Delete the cart file
   responseCreator.setIsSuccess(true);
 
-  const result = responseCreator.getResponse();
-  res.send(result);
+return res.send(responseCreator.getResponse());
 });
 /** POST /cart/submit/:account **/
 
@@ -620,35 +608,67 @@ app.post("/comment/:account/:id", (req, res) => {
   const { account, id } = req.params;
   const { comment } = req.body;
   const responseCreator = getResponseCreator();
-  const commentRoute = commentsRoutePrefix + id + commentsRouteSuffix;
 
   if (!comment) {
     responseCreator.setIsSuccess(false);
     responseCreator.setCause("Comment cannot be empty.");
-  } else {
-    if (fs.existsSync(commentRoute)) {
-      const comments = parseJsonFile(commentRoute, responseCreator, res);
-      if (!comments) return;
+    return res.send(responseCreator.getResponse());
+  } 
+  
+  if (!fs.existsSync(accountsRoute)) {
+    responseCreator.setIsSuccess(false);
+    responseCreator.setCause(`${accountsRoute} does not exist.`);
+    return res.send(responseCreator.getResponse());
+  }
 
-      if (comments[account]) {
-        responseCreator.setIsSuccess(false);
-        responseCreator.setCause("Account has commented before.");
-      } else {
-        comments[account] = comment;
-        const writeComments = writeJsonFile(commentRoute, comments, responseCreator, res);
-        if(!writeComments) return;
-        responseCreator.setIsSuccess(true);
-      }
+  const accounts = parseJsonFile(accountsRoute, responseCreator, res);
+  if (!accounts) return;
+  
+  if (!(account in accounts)) {
+    responseCreator.setIsSuccess(false);
+    responseCreator.setCause("Account does not exist.");
+    return res.send(responseCreator.getResponse());
+  }
+
+  const purchasedRoute = purchasedRoutePrefix + account + purchasedRouteSuffix;
+  if (!fs.existsSync(purchasedRoute)) {
+    responseCreator.setIsSuccess(false);
+    responseCreator.setCause(`${purchasedRoute} does not exist.`);
+    return res.send(responseCreator.getResponse());
+  }
+
+  const purchasedItems = parseJsonFile(purchasedRoute, responseCreator, res);
+  if (!purchasedItems) return;
+
+  if (!(id in purchasedItems)) {
+    responseCreator.setIsSuccess(false);
+    responseCreator.setCause("Account has not purchased this product.");
+    return res.send(responseCreator.getResponse());
+  }
+
+  const commentRoute = commentsRoutePrefix + id + commentsRouteSuffix;
+  if (fs.existsSync(commentRoute)) {
+    const comments = parseJsonFile(commentRoute, responseCreator, res);
+    if (!comments) return;
+
+    if (comments[account]) {
+      responseCreator.setIsSuccess(false);
+      responseCreator.setCause("Account has commented before.");
     } else {
-      const createCommentsJson = {};
-      createCommentsJson[account] = comment;
-      const writeComments = writeJsonFile(commentRoute, createCommentsJson, responseCreator, res);
+      comments[account] = comment;
+      const writeComments = writeJsonFile(commentRoute, comments, responseCreator, res);
       if(!writeComments) return;
       responseCreator.setIsSuccess(true);
     }
+  } else {
+    const createCommentsJson = {[account] : comment};
+    const writeComments = writeJsonFile(commentRoute, createCommentsJson, responseCreator, res);
+    if(!writeComments) return;
+    responseCreator.setIsSuccess(true);
+    responseCreator.setCause("Comment has been created.");
   }
-  const result = responseCreator.getResponse();
-  res.send(result);
+  
+  return res.send(responseCreator.getResponse());
 });
 /** POST /comment/:account/:id **/
 

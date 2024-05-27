@@ -158,7 +158,7 @@ image.img
 }
 ```
 ##### 8.寫評論：
-- /comment/:account/:id -> 更新 comment-\<id\>.json
+- /comment/:account/:id -> 確認 account 買過 pruduct-\<id\> -> 更新 comment-\<id\>.json
 > request:
 ```
 {
@@ -169,7 +169,8 @@ image.img
 > response:
 ```
 {
-  "isSuccess": Boolean
+  "isSuccess": Boolean,
+  "cause": String
 }
 ```
 ### 二. request & response 格式
