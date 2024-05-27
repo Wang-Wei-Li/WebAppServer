@@ -127,7 +127,7 @@ image.img
 }
 ```
 ##### 6.送出購物車：
-- /cart/submit/:account -> check product amount -> 更新 purchased-\<account\>.json
+- /cart/submit/:account -> verification -> 更新 purchased-\<account\>.json 和 product-\<id\>.json
 > request:
 ```
 {

@@ -530,80 +530,85 @@ app.post("/purchased/:account", (req, res) => {
 /** POST /cart/submit/:account **/
 app.post("/cart/submit/:account", (req, res) => {
   const account = req.params.account;
-  const cartRoute = cartRoutePrefix + account + cartRouteSuffix;
   const { password } = req.body;
   const responseCreator = getResponseCreator();
 
-  if (fs.existsSync(accountsRoute)) { // Check if accounts.json exists
-    const accounts = parseJsonFile(accountsRoute, responseCreator, res);
-    if (!accounts) return;
-    if (account in accounts && accounts[account] === password) { // Check if the account and password are correct
-      if (fs.existsSync(cartRoute)) { // Check if the cart file exists
-        const cart = parseJsonFile(cartRoute, responseCreator, res);
-        if (!cart) return;
+  if (!fs.existsSync(accountsRoute)) { // Check if accounts.json exists
+    responseCreator.setIsSuccess(false);
+    responseCreator.setCause(`${accountsRoute} does not exist.`);
+    return res.send(responseCreator.getResponse());
+  }
 
-        let isBought = true;
-        let boughtItems = {};
+  const accounts = parseJsonFile(accountsRoute, responseCreator, res);
+  if (!accounts) return;
 
-        for (const productId in cart) { // Check if there is enough amount for each product
-          let productRoute = productRoutePrefix + productId + productRouteSuffix;
-          if (fs.existsSync(productRoute)) {
-            let productInfo = parseJsonFile(productRoute, responseCreator, res);
-            if (!productInfo) return;
-            if (productInfo.amount >= cart[productId]) {
-              boughtItems[productId] = cart[productId];
-            } else {
-              responseCreator.setIsSuccess(false);
-              responseCreator.setCause("Some products in the cart are out of stock.");
-              isBought = false;
-              break;
-            }
-          } else {
-            responseCreator.setIsSuccess(false);
-            responseCreator.setCause("Some products in the cart do not exist.");
-            isBought = false;
-            break;
-          }
-        }
+  if (!(account in accounts) || accounts[account] !== password) { // Check if the account and password match
+    responseCreator.setIsSuccess(false);
+    responseCreator.setCause("Wrong account or password.");
+    return res.send(responseCreator.getResponse());
+  }
 
-        if (isBought) {
-          const purchasedRoute = purchasedRoutePrefix + account + purchasedRouteSuffix;
-          const purchasedItems = fs.existsSync(purchasedRoute) ? parseJsonFile(purchasedRoute, responseCreator, res) : {};
-          if (!purchasedItems) return;
+  const cartRoute = cartRoutePrefix + account + cartRouteSuffix;
+  if (!fs.existsSync(cartRoute)) { // Check if the cart file exists
+    responseCreator.setIsSuccess(false);
+    responseCreator.setCause("Cart is empty.");
+    return res.send(responseCreator.getResponse());
+  }
+  
+  const cart = parseJsonFile(cartRoute, responseCreator, res);
+  if (!cart) return;
 
-          for (const productId in boughtItems) {  // Update the purchased items
-            let productRoute = productRoutePrefix + productId + productRouteSuffix;
-            let productInfo = parseJsonFile(productRoute, responseCreator, res);
-            if (!productInfo) return;
-            productInfo.amount -= boughtItems[productId];
-            const writeProduct = writeJsonFile(productRoute, productInfo, responseCreator, res);
-            if (!writeProduct) return;
+  let boughtItems = {};
+  for (const productId in cart) { // Check if there is enough amount for each product
+    let productRoute = productRoutePrefix + productId + productRouteSuffix;
+    if (!fs.existsSync(productRoute)) {
+      responseCreator.setIsSuccess(false);
+      responseCreator.setCause(`${productRoute} does not exist.`);
+      return res.send(responseCreator.getResponse());
+    }
 
-            if (productId in purchasedItems) {
-              purchasedItems[productId] += boughtItems[productId];
-            } else {
-              purchasedItems[productId] = boughtItems[productId];
-            }
-          }
+    let productInfo = parseJsonFile(productRoute, responseCreator, res);
+    if (!productInfo) return;
 
-          const writePurchased = writeJsonFile(purchasedRoute, purchasedItems, responseCreator, res);
-          if (!writePurchased) return;
-          responseCreator.setIsSuccess(true);
-
-          fs.unlinkSync(cartRoute);
-        }
-      } else {
-        responseCreator.setIsSuccess(false);
-        responseCreator.setCause("Cart file does not exist.");
-      }
+    if (productInfo.amount >= cart[productId]) {
+      boughtItems[productId] = cart[productId];
     } else {
       responseCreator.setIsSuccess(false);
-      responseCreator.setCause("Wrong account or password.");
+      responseCreator.setCause(`Product ${productId} does not have enough amount.`);
+      return res.send(responseCreator.getResponse());
     }
-  } else {
-    responseCreator.setIsSuccess(false);
-    responseCreator.setCause("Account file does not exist.");
   }
+
+  const purchasedRoute = purchasedRoutePrefix + account + purchasedRouteSuffix;
+  if (!fs.existsSync(purchasedRoute)) { // Check if the purchased file exists
+    responseCreator.setIsSuccess(false);
+    responseCreator.setCause(`${purchasedRoute} does not exist.`);
+    return res.send(responseCreator.getResponse());
+  }
+  
+  const purchasedItems = parseJsonFile(purchasedRoute, responseCreator, res);
+  if (!purchasedItems) return;
+  
+  for (const productId in boughtItems) { // Update the product amount and purchased items
+    let productRoute = productRoutePrefix + productId + productRouteSuffix;
+    let productInfo = parseJsonFile(productRoute, responseCreator, res);
+    if (!productInfo) return;
+
+    productInfo.amount -= boughtItems[productId]; // Subtract the bought amount from the product amount
+    const writeProduct = writeJsonFile(productRoute, productInfo, responseCreator, res);
+    if (!writeProduct) return;
+
+    if (productId in purchasedItems) { // Update the purchased items
+      purchasedItems[productId] += boughtItems[productId];
+    } else {
+      purchasedItems[productId] = boughtItems[productId];
+    }
+  }
+  const writePurchased = writeJsonFile(purchasedRoute, purchasedItems, responseCreator, res);
+  if (!writePurchased) return;
+
+  fs.unlinkSync(cartRoute); // Delete the cart file
+  responseCreator.setIsSuccess(true);
 
   const result = responseCreator.getResponse();
   res.send(result);
