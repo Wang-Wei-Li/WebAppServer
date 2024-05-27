@@ -1,9 +1,8 @@
 class Response {
-  constructor(isSuccess, cause, productInfos, amount, comments) {
+  constructor(isSuccess, cause, productInfos, comments) {
     this.isSuccess = isSuccess;
     this.cause = cause;
     this.productInfos = productInfos; // product's information; array
-    this.amount = amount;             // cart amount; purchased amount;
     this.comments = comments;         // product's comments; array
   }
 }
@@ -13,7 +12,6 @@ class ResponseCreator {
     this.isSuccess = null;
     this.cause = null;
     this.productInfos = null;
-    this.amount = null;
     this.comments = null;
   }
 
@@ -25,9 +23,6 @@ class ResponseCreator {
   }
   setProductInfos(productInfos) {
     this.productInfos = productInfos;
-  }
-  setAmount(amount) {
-    this.amount = amount;
   }
   setComments(comments) {
     this.comments = comments;

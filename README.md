@@ -190,7 +190,6 @@ image.img
 {
   "isSuccess": Boolean,
   "productInfos": [ProductInfo],
-  "amount": Int,
   "cause": String,
   "comments": [String...]
 }
@@ -203,7 +202,7 @@ image.img
   "price": Int,
   "author": String,
   "summary": String,
-  "amount": Int,                // available amount
+  "amount": Int,                // available amount, purchased amount or amounts in cart.
   "categories":  [String...]    // array
 }
 ```
@@ -212,7 +211,7 @@ image.img
 
 ##### JS files
 - server.js
-- adjustproduct.js
+- adjustproduct.js (maybe)
 
 ##### JSON files (Contributed by 組員 楊孟翰)
 - /data/accounts.json
@@ -246,7 +245,7 @@ image.img
 - /data/archived/products.json (管理下架的 product)
 ```
 {
-  "id", date,
+  "id", "YYYY-MM-DD",
   ...
 }
 ```
@@ -255,14 +254,14 @@ image.img
 ```
 see ProductInfo
 ```
-- /data/comment-\<id\>.json -> array
+- /data/comment-\<id\>.json
 ```
 {
   "account": comment,
   ...
 }
 ```
-- /data/recommendations.json -> array
+- /data/recommendations.json
 ```
 {
   "order": id,
