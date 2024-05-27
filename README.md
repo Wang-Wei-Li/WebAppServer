@@ -111,7 +111,7 @@ image.img
 }
 ```
 ##### 5.購物車商品數量增減：
-- /cart/change/:account
+- /cart/change/:account -> cart-\<account\>.json (無商品時 delete)
 > request:
 ```
 {
@@ -122,7 +122,8 @@ image.img
 > response:
 ```
 {
-  "isSuccess": Boolean
+  "isSuccess": Boolean,
+  "cause": String
 }
 ```
 ##### 6.送出購物車：

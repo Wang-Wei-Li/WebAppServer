@@ -11,15 +11,28 @@ app.use(cors()); // for cross-origin requests, could be removed if not needed
 app.use(express.urlencoded({extended: true}));
 app.use(express.json());
 
-function parseJsonFile(route, responseCreator, res) {
+function parseJsonFile(route, responseCreator, res) { // Parse JSON file with proper error handling
   try {
       return JSON.parse(fs.readFileSync(route));
   } catch (error) {
       responseCreator.setIsSuccess(false);
-      responseCreator.setCause("Error parsing JSON file.");
+      responseCreator.setCause("Error parsing JSON file: " + error.message);
       const result = responseCreator.getResponse();
       res.send(result); // Send response from within the function
       return null; // Return null to indicate failure
+  }
+}
+
+function writeJsonFile(route, data, responseCreator, res) { // Write JSON file with proper error handling
+  try {
+    fs.writeFileSync(route, JSON.stringify(data));
+    return true;
+  } catch (error) {
+    responseCreator.setIsSuccess(false);
+    responseCreator.setCause("Error writing JSON file: " + error.message);
+    const result = responseCreator.getResponse();
+    res.send(result);
+    return false;
   }
 }
 
@@ -82,11 +95,13 @@ app.get("/product/:id", (req, res) => {
       const viewcounts = parseJsonFile(viewcountsRoute, responseCreator, res);
       if(!viewcounts) return;
       viewcounts[productId] += 1;
-      fs.writeFileSync(viewcountsRoute, JSON.stringify(viewcounts));
+      const writeVeiwcounts = writeJsonFile(viewcountsRoute, viewcounts, responseCreator, res);
+      if(!writeVeiwcounts) return;
     } else { // if viewcounts.json does not exist, create it
       const createViewcountsJson = {};
       createViewcountsJson[productId] = 1;
-      fs.writeFileSync(viewcountsRoute, JSON.stringify(createViewcountsJson));
+      const writeVeiwcounts = writeJsonFile(viewcountsRoute, createViewcountsJson, responseCreator, res);
+      if(!writeVeiwcounts) return;
     }
   } else {
     responseCreator.setIsSuccess(false);
@@ -98,29 +113,6 @@ app.get("/product/:id", (req, res) => {
   res.send(result);
 });
 /** GET /product/:id **/
-
-/** GET /product/image:id **/
-import { dirname } from 'path';
-import { fileURLToPath } from 'url';
-const moduleURL = import.meta.url;
-const filePath = fileURLToPath(moduleURL);
-const directoryPath = dirname(filePath);
-
-app.get("/product/image/:id", (req, res) => {
-  const productId = req.params.id;
-  const imageRoute = directoryPath + `/data/image-${productId}.png`;
-
-  if(fs.existsSync(imageRoute)) {
-    res.sendFile(imageRoute, (err) => {
-      if(err) {
-        console.log("Error of Sending File: ", err);
-      }
-    });
-  } else {
-    res.send("File does not exist.");
-  }
-});
-/** GET /product/image:id **/
 
 const recommendationsRoute = "./data/recommendations.json";
 
@@ -226,6 +218,29 @@ app.get("/comment/:id", (req, res) => {
 });
 /** GET /comment/:id **/
 
+/** GET /product/image:id **/
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
+const moduleURL = import.meta.url;
+const filePath = fileURLToPath(moduleURL);
+const directoryPath = dirname(filePath);
+
+app.get("/product/image/:id", (req, res) => {
+  const productId = req.params.id;
+  const imageRoute = directoryPath + `/data/image-${productId}.png`;
+
+  if(fs.existsSync(imageRoute)) {
+    res.sendFile(imageRoute, (err) => {
+      if(err) {
+        console.log("Error of Sending File: ", err);
+      }
+    });
+  } else {
+    res.send("File does not exist.");
+  }
+});
+/** GET /product/image:id **/
+
 const accountsRoute = "./data/accounts.json";
 
 // POST
@@ -244,7 +259,8 @@ app.post("/register", (req, res) => {
       responseCreator.setCause("Account already exists.");
     } else {
       accounts[account] = password;
-      fs.writeFileSync(accountsRoute, JSON.stringify(accounts));
+      const writeAccounts = writeJsonFile(accountsRoute, accounts, responseCreator, res);
+      if(!writeAccounts) return;
       responseCreator.setIsSuccess(true);
     }
   } else { // if accounts.json does not exist
@@ -390,6 +406,61 @@ app.post("/cart/:account", (req, res) => {
 });
 /** POST /cart/:account **/
 
+/** POST /cart/change/:account **/
+app.post("/cart/change/:account", (req, res) => {
+  const account = req.params.account;
+  const { password, products } = req.body;
+  const responseCreator = getResponseCreator();
+
+  if (fs.existsSync(accountsRoute)) {
+    const accounts = parseJsonFile(accountsRoute, responseCreator, res);
+    if (!accounts) return;
+    if((account in accounts) && accounts[account] === password) {
+      const cartRoute = cartRoutePrefix + account + cartRouteSuffix;
+
+      let cart = {};
+      if (fs.existsSync(cartRoute)) {
+        cart = parseJsonFile(cartRoute, responseCreator, res);
+        if (!cart) return;
+      }
+
+      for(const { id, amount } of products) {
+        if(id in cart) {
+          cart[id] += amount;
+        } else {
+          cart[id] = amount;
+        }
+        
+        if (cart[id] <= 0) {
+          delete cart[id];
+        }
+      }
+      
+      if (Object.keys(cart).length === 0) { // if cart is empty
+        if (fs.existsSync(cartRoute)) {
+          fs.unlinkSync(cartRoute); // delete the cart file
+          responseCreator.setCause("Cart is empty and has been deleted.");
+        }
+      } else {
+        const writeCart = writeJsonFile(cartRoute, cart, responseCreator, res);
+        if (!writeCart) return;
+      }
+
+      responseCreator.setIsSuccess(true);
+    } else {
+      responseCreator.setIsSuccess(false);
+      responseCreator.setCause("Wrong account or password.");
+    }
+  } else {
+    responseCreator.setIsSuccess(false);
+    responseCreator.setCause(`${accountsRoute} does not exist.`);
+  }
+
+  const result = responseCreator.getResponse();
+  res.send(result);
+});
+/** POST /cart/change/:account **/
+
 const purchasedRoutePrefix = "./data/purchased-";
 const purchasedRouteSuffix = ".json";
 
@@ -436,47 +507,6 @@ app.post("/purchased/:account", (req, res) => {
   res.send(result);
 });
 /** POST /purchased/:account **/
-
-/** POST /cart/change/:account **/
-app.post("/cart/change/:account", (req, res) => {
-  const account = req.params.account;
-  const cartRoute = cartRoutePrefix + account + cartRouteSuffix;
-  const { password, products } = req.body;
-  const responseCreator = getResponseCreator();
-
-  const accounts = parseJsonFile(accountsRoute, responseCreator, res);
-  if (!accounts) return;
-  if((account in accounts) && accounts[account] === password) {
-    responseCreator.setIsSuccess(true);
-    
-    let cart = {};
-    if(fs.existsSync(cartRoute)) {
-      cart = parseJsonFile(cartRoute, responseCreator, res);
-      if (!cart) return;
-    }
-    
-    for(const { id, amount } of products) {
-      if(id in cart) {
-        cart[id] += amount;
-      } else {
-        cart[id] = amount;
-      }
-    }
-
-    fs.writeFile(cartRoute, JSON.stringify(cart), (err) => {
-      if(err) {
-        console.log(err);
-      }
-    });
-  } else {
-    responseCreator.setIsSuccess(false);
-    responseCreator.setCause("Wrong account or password.");
-  }
-
-  const result = responseCreator.getResponse();
-  res.send(result);
-});
-/** POST /cart/change/:account **/
 
 /** POST /cart/submit/:account **/
 app.post("/cart/submit/:account", (req, res) => {
@@ -527,7 +557,8 @@ app.post("/cart/submit/:account", (req, res) => {
             let productInfo = parseJsonFile(productRoute, responseCreator, res);
             if (!productInfo) return;
             productInfo.amount -= boughtItems[productId];
-            fs.writeFileSync(productRoute, JSON.stringify(productInfo));
+            const writeProduct = writeJsonFile(productRoute, productInfo, responseCreator, res);
+            if (!writeProduct) return;
 
             if (productId in purchasedItems) {
               purchasedItems[productId] += boughtItems[productId];
@@ -536,7 +567,8 @@ app.post("/cart/submit/:account", (req, res) => {
             }
           }
 
-          fs.writeFileSync(purchasedRoute, JSON.stringify(purchasedItems));
+          const writePurchased = writeJsonFile(purchasedRoute, purchasedItems, responseCreator, res);
+          if (!writePurchased) return;
           responseCreator.setIsSuccess(true);
 
           fs.unlinkSync(cartRoute);
@@ -579,13 +611,15 @@ app.post("/comment/:account/:id", (req, res) => {
         responseCreator.setCause("Account has commented before.");
       } else {
         comments[account] = comment;
-        fs.writeFileSync(commentRoute, JSON.stringify(comments));
+        const writeComments = writeJsonFile(commentRoute, comments, responseCreator, res);
+        if(!writeComments) return;
         responseCreator.setIsSuccess(true);
       }
     } else {
       const createCommentsJson = {};
       createCommentsJson[account] = comment;
-      fs.writeFileSync(commentRoute, JSON.stringify(createCommentsJson));
+      const writeComments = writeJsonFile(commentRoute, createCommentsJson, responseCreator, res);
+      if(!writeComments) return;
       responseCreator.setIsSuccess(true);
     }
   }
