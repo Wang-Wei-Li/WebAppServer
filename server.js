@@ -463,6 +463,8 @@ app.post("/cart/change/:account", (req, res) => {
 });
 /** POST /cart/change/:account **/
 
+const archivedProductRoutePrefix = "./data/archived/product-";
+
 const purchasedRoutePrefix = "./data/purchased-";
 const purchasedRouteSuffix = ".json";
 
@@ -485,18 +487,24 @@ app.post("/purchased/:account", (req, res) => {
 
         let allProductsExist = true;
         for (const productId in purchasedItems) {
-          const productRoute = productRoutePrefix + productId + productRouteSuffix;
+          let productInfo = null;
+          let productRoute = productRoutePrefix + productId + productRouteSuffix;
           if (fs.existsSync(productRoute)) {
-            const productInfo = parseJsonFile(productRoute, responseCreator, res);
+            productInfo = parseJsonFile(productRoute, responseCreator, res);
             if (!productInfo) return;
-            productInfo.amount = purchasedItems[productId];  // Set the purchased amount for the product
-            productInfos.push(productInfo);
           } else {
-            responseCreator.setCause(`${productRoute} does not exist.`);
-            allProductsExist = false;
-            productInfos = [];
-            break;
+            productRoute = archivedProductRoutePrefix + productId + productRouteSuffix;
+            if (fs.existsSync(productRoute)) {
+              productInfo = parseJsonFile(productRoute, responseCreator, res);
+              if (!productInfo) return;
+            } else {
+              responseCreator.setCause(`Both active and archived files for product ID ${productId} do not exist.`);
+              allProductsExist = false;
+              break;
+            }
           }
+          productInfo.amount = purchasedItems[productId];  // Set the purchased amount for the product
+          productInfos.push(productInfo);
         }
         
         responseCreator.setIsSuccess(allProductsExist);

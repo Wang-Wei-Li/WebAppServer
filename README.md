@@ -214,65 +214,74 @@ image.img
 - adjustproduct.js
 
 ##### JSON files (Contributed by 組員 楊孟翰)
-- accounts.json
+- /data/accounts.json
 ```
 {
   "account": password,
   ...
 }
 ```
-- cart-\<account\>.json
+- /data/cart-\<account\>.json
 ```
 {
   "id": amount,
   ...
 }
 ```
-- purchased-\<account\>.json 
+- /data/purchased-\<account\>.json 
 ```
 {
   "id": amount,
   ...
 }
 ```
-- products.json
+- /data/products.json
 ```
 {
   "id": amount,
   ...
 }
 ```
-- product-\<id\>.json
+- /data/archived/products.json (管理下架的 product)
+```
+{
+  "id", date,
+  ...
+}
+```
+- /data/product-\<id\>.json
+- /data/archived/product-\<id\>.json (保留下架的 product 使購買紀錄能正確顯示)
 ```
 see ProductInfo
 ```
-- comment-\<id\>.json -> array
+- /data/comment-\<id\>.json -> array
 ```
 {
   "account": comment,
   ...
 }
 ```
-- recommendations.json -> array
+- /data/recommendations.json -> array
 ```
 {
   "order": id,
   ...
 }
 ```
-- cause.json -> array
+- /data/cause.json -> array
 ```
 {
   "cause": cause,
   ...
 }
 ```
-- viewcounts.json (killed periodically)
+- /data/viewcounts.json (killed periodically)
 ```
 {
   "id": counts,
   ...
 }
+```
 ##### IMAGE files
 > image-\<id\>.img
 
