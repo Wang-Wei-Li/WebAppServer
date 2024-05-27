@@ -153,7 +153,8 @@ image.img
 ```
 {
   "isSuccess": Boolean,
-  "productInfos": [ProductInfo] // 此處 ProductInfo.amount 紀錄的是該商品的已購買數量
+  "productInfos": [ProductInfo], // 此處 ProductInfo.amount 紀錄的是該商品的已購買數量
+  "cause": String
 }
 ```
 ##### 8.寫評論：
@@ -227,7 +228,7 @@ image.img
   ...
 }
 ```
-- purchased-\<account\>.json
+- purchased-\<account\>.json 
 ```
 {
   "id": amount,
@@ -266,7 +267,7 @@ see ProductInfo
   ...
 }
 ```
-- viewcounts.json (killed every midnight)
+- viewcounts.json (killed periodically)
 ```
 {
   "id": counts,

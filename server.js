@@ -221,6 +221,7 @@ app.get("/comment/:id", (req, res) => {
 /** GET /product/image:id **/
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
+import e from "express";
 const moduleURL = import.meta.url;
 const filePath = fileURLToPath(moduleURL);
 const directoryPath = dirname(filePath);
@@ -383,13 +384,14 @@ app.post("/cart/:account", (req, res) => {
           } else {
             responseCreator.setCause(`${productRoute} does not exist.`);
             allProductsExist = false;
+            productInfos = [];
             break;
           }
         }
         responseCreator.setIsSuccess(allProductsExist);
       } else {
         responseCreator.setIsSuccess(false);
-        responseCreator.setCause(`${cartRoute} does not exist.`);
+        responseCreator.setCause("Cart is empty.");
       }
     } else {
       responseCreator.setIsSuccess(false);
@@ -474,11 +476,14 @@ app.post("/purchased/:account", (req, res) => {
   if (fs.existsSync(accountsRoute)) {
     const accounts = parseJsonFile(accountsRoute, responseCreator, res);
     if (!accounts) return;
+
     if (account in accounts && accounts[account] === password) {
       const purchasedRoute = purchasedRoutePrefix + account + purchasedRouteSuffix;
       if (fs.existsSync(purchasedRoute)) {
         const purchasedItems = parseJsonFile(purchasedRoute, responseCreator, res);
         if (!purchasedItems) return;
+
+        let allProductsExist = true;
         for (const productId in purchasedItems) {
           const productRoute = productRoutePrefix + productId + productRouteSuffix;
           if (fs.existsSync(productRoute)) {
@@ -486,12 +491,18 @@ app.post("/purchased/:account", (req, res) => {
             if (!productInfo) return;
             productInfo.amount = purchasedItems[productId];  // Set the purchased amount for the product
             productInfos.push(productInfo);
+          } else {
+            responseCreator.setCause(`${productRoute} does not exist.`);
+            allProductsExist = false;
+            productInfos = [];
+            break;
           }
         }
-        responseCreator.setIsSuccess(true);
+        
+        responseCreator.setIsSuccess(allProductsExist);
       } else {
         responseCreator.setIsSuccess(false);
-        responseCreator.setCause("No purchase records found.");
+        responseCreator.setCause(`${purchasedRoute} does not exist.`);
       }
     } else {
       responseCreator.setIsSuccess(false);
@@ -499,7 +510,7 @@ app.post("/purchased/:account", (req, res) => {
     }
   } else {
     responseCreator.setIsSuccess(false);
-    responseCreator.setCause("File does not exist.");
+    responseCreator.setCause(`${accountsRoute} does not exist.`);
   }
   responseCreator.setProductInfos(productInfos);
 
