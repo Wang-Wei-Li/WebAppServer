@@ -7,7 +7,6 @@ class ProductInfo {
     this.summary = summary;
     this.amount = amount;         // available amount
     this.categories = categories; // array
-    this.isComment = isComment;
   }
 }
 
@@ -20,7 +19,6 @@ class ProductInfoCreator {
     this.summary = null;
     this.amount = null;
     this.categories = null;
-    this.isComment = null;
   }
 
   setId(id) {
@@ -44,12 +42,9 @@ class ProductInfoCreator {
   setCategories(categories) {
     this.categories = categories;
   }
-  setIsComment(isComment) {
-    this.isComment = isComment;
-  }
 
   getProductInfo() {
-    return new ProductInfo(this.id, this.name, this.price, this.author, this.summary, this.amount, this.categories, this.isComment);
+    return new ProductInfo(this.id, this.name, this.price, this.author, this.summary, this.amount, this.categories);
   }
 
   static getCreator() {

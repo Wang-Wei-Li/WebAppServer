@@ -493,7 +493,8 @@ app.post("/purchased/:account", (req, res) => {
               break;
             }
           }
-          productInfo.amount = purchasedItems[productId];  // Set the purchased amount for the product
+          productInfo.amount = purchasedItems[productId][0];  // Set the purchased amount for the product
+          productInfo.isComment = purchasedItems[productId][1]; // Set the isComment for the product
           productInfos.push(productInfo);
         }
         
@@ -588,9 +589,10 @@ app.post("/cart/submit/:account", (req, res) => {
     if (!writeProduct) return;
 
     if (productId in purchasedItems) { // Update the purchased items
-      purchasedItems[productId] += boughtItems[productId];
+      purchasedItems[productId][0] += boughtItems[productId];
     } else {
-      purchasedItems[productId] = boughtItems[productId];
+      purchasedItems[productId][0] = boughtItems[productId];
+      purchasedItems[productId][1] = false; // Set isComment to false
     }
   }
   const writePurchased = writeJsonFile(purchasedRoute, purchasedItems, responseCreator, res);
@@ -658,12 +660,18 @@ app.post("/comment/:account/:id", (req, res) => {
       comments[account] = comment;
       const writeComments = writeJsonFile(commentRoute, comments, responseCreator, res);
       if(!writeComments) return;
+      purchasedItems[id][1] = true; // Set isComment to true
+      const writePurchased = writeJsonFile(purchasedRoute, purchasedItems, responseCreator, res);
+      if(!writePurchased) return;
       responseCreator.setIsSuccess(true);
     }
   } else {
     const createCommentsJson = {[account] : comment};
     const writeComments = writeJsonFile(commentRoute, createCommentsJson, responseCreator, res);
     if(!writeComments) return;
+    purchasedItems[id][1] = true; // Set isComment to true
+    const writePurchased = writeJsonFile(purchasedRoute, purchasedItems, responseCreator, res);
+    if(!writePurchased) return;
     responseCreator.setIsSuccess(true);
     responseCreator.setCause("Comment has been created.");
   }

@@ -154,11 +154,12 @@ image.img
 {
   "isSuccess": Boolean,
   "productInfos": [ProductInfo], // 此處 ProductInfo.amount 紀錄的是該商品的已購買數量
+                                 // 此處的 ProductInfo 會多一個 "isComment" key 紀錄此 account 是否對此 product comment 過
   "cause": String
 }
 ```
 ##### 8.寫評論：
-- /comment/:account/:id -> 確認 account 買過 pruduct-\<id\> -> 更新 comment-\<id\>.json
+- /comment/:account/:id -> 確認 account 買過 pruduct-\<id\> -> 更新 comment-\<id\>.json -> 更新 purchased-\<account\>.json
 > request:
 ```
 {
@@ -204,7 +205,6 @@ image.img
   "summary": String,
   "amount": Int,                // available amount, purchased amount or amounts in cart.
   "categories":  [String...],    // array
-  "isComment" : Boolean
 }
 ```
 
@@ -232,7 +232,7 @@ image.img
 - purchased-\<account\>.json 
 ```
 {
-  "id": amount,
+  "id": [isComment, amount],
   ...
 }
 ```

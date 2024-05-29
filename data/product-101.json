@@ -1,9 +1,1 @@
-{
-  "id": "101",                 
-  "name": "A Walk in the Park: The True Story of a Spectacular Misadventure in the Grand Canyon",
-  "price": 900,
-  "author": "Kevin Fedarko",
-  "summary": "A few years after quitting his job to follow an ill-advised dream of becoming a guide on the Colorado River, Kevin Fedarko was approached by his best friend, the National Geographic photographer Pete McBride, with a vision as bold as it was harebrained. Together, they would embark on an end-to-end traverse of the Grand Canyon, a journey that, McBride promised, would be “a walk in the park.” Against his better judgment, Fedarko agreed to the scheme, unaware that the small cluster of experts who had completed the crossing billed it as “the toughest hike in the world",
-  "amount": 50,                
-  "categories":["travel","america","western","mountain"]
-}
+{"id":"101","name":"A Walk in the Park: The True Story of a Spectacular Misadventure in the Grand Canyon","price":900,"author":"Kevin Fedarko","summary":"A few years after quitting his job to follow an ill-advised dream of becoming a guide on the Colorado River, Kevin Fedarko was approached by his best friend, the National Geographic photographer Pete McBride, with a vision as bold as it was harebrained. Together, they would embark on an end-to-end traverse of the Grand Canyon, a journey that, McBride promised, would be “a walk in the park.” Against his better judgment, Fedarko agreed to the scheme, unaware that the small cluster of experts who had completed the crossing billed it as “the toughest hike in the world","amount":49,"categories":["travel","america","western","mountain"]}
