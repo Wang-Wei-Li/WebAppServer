@@ -17,8 +17,7 @@ function parseJsonFile(route, responseCreator, res) { // Parse JSON file with pr
   } catch (error) {
       responseCreator.setIsSuccess(false);
       responseCreator.setCause("Error parsing JSON file: " + error.message);
-      const result = responseCreator.getResponse();
-      res.send(result); // Send response from within the function
+      res.send(responseCreator.getResponse()); // Send response from within the function
       return null; // Return null to indicate failure
   }
 }
@@ -30,8 +29,7 @@ function writeJsonFile(route, data, responseCreator, res) { // Write JSON file w
   } catch (error) {
     responseCreator.setIsSuccess(false);
     responseCreator.setCause("Error writing JSON file: " + error.message);
-    const result = responseCreator.getResponse();
-    res.send(result);
+    res.send(responseCreator.getResponse());
     return false;
   }
 }
@@ -197,17 +195,17 @@ app.get("/comment/:id", (req, res) => {
   const responseCreator = getResponseCreator();
   const commentRoute = commentsRoutePrefix + productId + commentsRouteSuffix;
 
-  let commentArray = [];
   if(fs.existsSync(commentRoute)) {
     const comments = parseJsonFile(commentRoute, responseCreator, res);
     if(!comments) return;
-    commentArray = Object.values(comments); // Convert object to array
+
+    responseCreator.setComments(comments);
     responseCreator.setIsSuccess(true);
   } else {
     responseCreator.setIsSuccess(false);
     responseCreator.setCause("No comments yet.");
   }
-  responseCreator.setComments(commentArray);
+
 
 return res.send(responseCreator.getResponse());
 });
@@ -371,6 +369,7 @@ app.post("/cart/:account", (req, res) => {
           if (fs.existsSync(productRoute)) {
             let productInfo = parseJsonFile(productRoute, responseCreator, res);
             if (!productInfo) return;
+
             productInfo["amount"] = cart[productId];
             productInfos.push(productInfo);
           } else {
@@ -487,6 +486,14 @@ app.post("/purchased/:account", (req, res) => {
             if (fs.existsSync(productRoute)) {
               productInfo = parseJsonFile(productRoute, responseCreator, res);
               if (!productInfo) return;
+
+              if (!purchasedItems[productId][1]) {
+                purchasedItems[productId][1] = true; // Set isComment to true for archived product
+                const writePurchased = writeJsonFile(purchasedRoute, purchasedItems, responseCreator, res);
+                if (!writePurchased) return;
+              }
+
+              responseCreator.setCause(`Product ${productId} is archived.`)
             } else {
               responseCreator.setCause(`Both active and archived files for product ID ${productId} do not exist.`);
               allProductsExist = false;
@@ -608,7 +615,7 @@ return res.send(responseCreator.getResponse());
 /** POST /comment/:account/:id **/
 app.post("/comment/:account/:id", (req, res) => {
   const { account, id } = req.params;
-  const { comment } = req.body;
+  const { rating , comment } = req.body;
   const responseCreator = getResponseCreator();
 
   if (!comment) {
@@ -657,7 +664,7 @@ app.post("/comment/:account/:id", (req, res) => {
       responseCreator.setIsSuccess(false);
       responseCreator.setCause("Account has commented before.");
     } else {
-      comments[account] = comment;
+      comments[account] = [rating, comment];
       const writeComments = writeJsonFile(commentRoute, comments, responseCreator, res);
       if(!writeComments) return;
       purchasedItems[id][1] = true; // Set isComment to true
@@ -666,7 +673,7 @@ app.post("/comment/:account/:id", (req, res) => {
       responseCreator.setIsSuccess(true);
     }
   } else {
-    const createCommentsJson = {[account] : comment};
+    const createCommentsJson = {[account] : [rating, comment]};
     const writeComments = writeJsonFile(commentRoute, createCommentsJson, responseCreator, res);
     if(!writeComments) return;
     purchasedItems[id][1] = true; // Set isComment to true

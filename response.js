@@ -29,7 +29,7 @@ class ResponseCreator {
   }
 
   getResponse() {
-    return new Response(this.isSuccess, this.cause, this.productInfos, this.amount, this.comments);
+    return new Response(this.isSuccess, this.cause, this.productInfos, this.comments);
   }
 
   static getCreator() {

@@ -32,7 +32,7 @@
 ```
 {
   "isSuccess": Boolean,
-  "comments": [String...],
+  "comments": [comment-<id>.json, ...]
   "cause": String
 }
 ```
@@ -154,7 +154,8 @@ image.img
 {
   "isSuccess": Boolean,
   "productInfos": [ProductInfo], // 此處 ProductInfo.amount 紀錄的是該商品的已購買數量
-                                 // 此處的 ProductInfo 會多一個 "isComment" key 紀錄此 account 是否對此 product comment 過
+                                 // 此處的 ProductInfo 會多一個 "isComment" key 紀錄此 account 是否對此 product comment 過,
+                                 // archived product 的 "isComment" 設為 True
   "cause": String
 }
 ```
@@ -163,7 +164,7 @@ image.img
 > request:
 ```
 {
-  "password": String,
+  "rating": Int,
   "comment": String
 }
 ```
@@ -221,7 +222,7 @@ image.img
   "account": password,
   ...
 }
-```
+
 - cart-\<account\>.json
 ```
 {
@@ -232,7 +233,7 @@ image.img
 - purchased-\<account\>.json 
 ```
 {
-  "id": [isComment, amount],
+  "id": [amount, isComment], // archived product 的 isComment 設為 true
   ...
 }
 ```
@@ -258,7 +259,7 @@ see ProductInfo
 - comment-\<id\>.json
 ```
 {
-  "account": comment,
+  "account": [rating, comment],
   ...
 }
 ```
