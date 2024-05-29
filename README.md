@@ -203,7 +203,8 @@ image.img
   "author": String,
   "summary": String,
   "amount": Int,                // available amount, purchased amount or amounts in cart.
-  "categories":  [String...]    // array
+  "categories":  [String...],    // array
+  "isComment" : Boolean
 }
 ```
 
