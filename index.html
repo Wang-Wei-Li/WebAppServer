@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebAppServer Frontend</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .container {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        input, textarea, select {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            background-color: #f9f9f9;
+        }
+    </style>
+</head>
+<body>
+    <h1>WebAppServer Frontend</h1>
+
+    <div class="container">
+        <h2>Register</h2>
+        <label for="registerAccount">Account</label>
+        <input type="text" id="registerAccount">
+        <label for="registerPassword">Password</label>
+        <input type="password" id="registerPassword">
+        <button onclick="register()">Register</button>
+        <div id="registerResult" class="result"></div>
+    </div>
+
+    <div class="container">
+        <h2>Login</h2>
+        <label for="loginAccount">Account</label>
+        <input type="text" id="loginAccount">
+        <label for="loginPassword">Password</label>
+        <input type="password" id="loginPassword">
+        <button onclick="login()">Login</button>
+        <div id="loginResult" class="result"></div>
+    </div>
+
+    <div class="container">
+        <h2>Get Product</h2>
+        <label for="productId">Product ID (leave empty to get all products)</label>
+        <input type="text" id="productId">
+        <button onclick="getProduct()">Get Product</button>
+        <div id="productResult" the result=""></div>
+    </div>
+
+    <div class="container">
+        <h2>Get Recommendation</h2>
+        <label for="recommendationRank">Rank (leave empty to get all recommendations)</label>
+        <input type="text" id="recommendationRank">
+        <button onclick="getRecommendation()">Get Recommendation</button>
+        <div id="recommendationResult" class="result"></div>
+    </div>
+
+    <div class="container">
+        <h2>Get Comments</h2>
+        <label for="commentProductId">Product ID</label>
+        <input type="text" id="commentProductId">
+        <button onclick="getComments()">Get Comments</button>
+        <div id="commentsResult" class="result"></div>
+    </div>
+
+    <div class="container">
+        <h2>Filter Products</h2>
+        <label for="filterCategories">Categories (comma separated, e.g., books,electronics)</label>
+        <input type="text" id="filterCategories">
+        <button onclick="filterProducts()">Filter Products</button>
+        <div id="filterProductsResult" class="result"></div>
+    </div>
+
+    <div class="container">
+        <h2>Get Cart</h2>
+        <label for="cartAccount">Account</label>
+        <input type="text" id="cartAccount">
+        <label for="cartPassword">Password</label>
+        <input type="password" id="cartPassword">
+        <button onclick="getCart()">View Cart</button>
+        <div id="cartResult" class="result"></div>
+    </div>
+
+    <div class="container">
+        <h2>Update Cart</h2>
+        <label for="updateCartAccount">Account</label>
+        <input type="text" id="updateCartAccount">
+        <label for="updateCartPassword">Password</label>
+        <input type="password" id="updateCartPassword">
+        <label for="productIdCartChange">Product ID</label>
+        <input type="text" id="productIdCartChange">
+        <label for="productAmountChange">Amount (negative to reduce, positive to add)</label>
+        <input type="number" id="productAmountChange">
+        <button onclick="updateCart()">Update Cart</button>
+        <div id="updateCartResult" class="result"></div>
+    </div>
+
+    <div class="container">
+        <h2>Submit Cart</h2>
+        <label for="submitCartAccount">Account</label>
+        <input type="text" id="submitCartAccount">
+        <label for="submitCartPassword">Password</label>
+        <input type="password" id="submitCartPassword">
+        <button onclick="submitCart()">Submit Cart</button>
+        <div id="submitCartResult" class="result"></div>
+    </div>
+    
+    <div class="container">
+        <h2>View Purchased Products</h2>
+        <label for="purchasedAccount">Account</label>
+        <input type="text" id="purchasedAccount">
+        <label for="purchasedPassword">Password</label>
+        <input type="password" id="purchasedPassword">
+        <button onclick="viewPurchased()">View Purchased</button>
+        <div id="purchasedResult" class="result"></div>
+    </div>
+    
+    <div class="container">
+        <h2>Post Comment</h2>
+        <label for="commentAccount">Account</label>
+        <input type="text" id="commentAccount">
+        <label for="commentProductId">Product ID</label>
+        <input type="text" id="commentProductId">
+        <label for="commentRating">Rating</label>
+        <input type="number" id="commentRating" min="1" max="5">
+        <label for="commentText">Comment</label>
+        <textarea id="commentText"></textarea>
+        <button onclick="postComment()">Post Comment</button>
+        <div id="commentResult" class="result"></div>
+    </div>    
+
+    <script>
+        const baseUrl = 'http://localhost:3000';
+
+        async function register() {
+            const account = document.getElementById('registerAccount').value;
+            const password = document.getElementById('registerPassword').value;
+
+            const response = await fetch(`${baseUrl}/register`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ account, password })
+            });
+
+            const result = await response.json();
+            document.getElementById('registerResult').textContent = JSON.stringify(result, null, 2);
+        }
+
+        async function login() {
+            const account = document.getElementById('loginAccount').value;
+            const password = document.getElementById('loginPassword').value;
+
+            const response = await fetch(`${baseUrl}/login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ account, password })
+            });
+
+            const result = await response.json();
+            document.getElementById('loginResult').textContent = JSON.stringify(result, null, 2);
+        }
+
+        async function getProduct() {
+            const productId = document.getElementById('productId').value;
+            const url = productId ? `${baseUrl}/product/${productId}` : `${baseUrl}/product`;
+
+            const response = await fetch(url);
+            const result = await response.json();
+            document.getElementById('productResult').textContent = JSON.stringify(result, null, 2);
+        }
+
+        async function getRecommendation() {
+            const rank = document.getElementById('recommendationRank').value;
+            const url = rank ? `${baseUrl}/recommendation/${rank}` : `${baseUrl}/recommendation`;
+
+            const response = await fetch(url);
+            const result = await response.json();
+            document.getElementById('recommendationResult').textContent = JSON.stringify(result, null, 2);
+        }
+
+        async function getComments() {
+            const productId = document.getElementById('commentProductId').value;
+
+            const response = await fetch(`${baseUrl}/comment/${productId}`);
+            const result = await response.json();
+            document.getElementById('commentsResult').textContent = JSON.stringify(result, null, 2);
+        }
+
+        async function filterProducts() {
+            const categories = document.getElementById('filterCategories').value.split(',');
+            
+            const response = await fetch(`${baseUrl}/product?category=${categories.join(',')}`);
+            const result = await response.json();
+            document.getElementById('filterProductsResult').textContent = JSON.stringify(result, null, 2);
+        }
+
+        async function getCart() {
+            const account = document.getElementById('cartAccount').value;
+            const password = document.getElementById('cartPassword').value;
+    
+            // POST request to view the cart
+            const response = await fetch(`${baseUrl}/cart/${account}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ password })
+            });
+    
+            const result = await response.json();
+            document.getElementById('cartResult').textContent = JSON.stringify(result, null, 2);
+        }
+    
+        async function updateCart() {
+            const account = document.getElementById('updateCartAccount').value;
+            const password = document.getElementById('updateCartPassword').value;
+            const productId = document.getElementById('productIdCartChange').value;
+            const amount = parseInt(document.getElementById('productAmountChange').value);
+    
+            // POST request to update the cart
+            const response = await fetch(`${baseUrl}/cart/change/${account}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    password,
+                    products: [{ id: productId, amount }]
+                })
+            });
+    
+            const result = await response.json();
+            document.getElementById('updateCartResult').textContent = JSON.stringify(result, null, 2);
+        }
+
+        async function submitCart() {
+            const account = document.getElementById('submitCartAccount').value;
+            const password = document.getElementById('submitCartPassword').value;
+    
+            const response = await fetch(`${baseUrl}/cart/submit/${account}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ password })
+            });
+    
+            const result = await response.json();
+            document.getElementById('submitCartResult').textContent = JSON.stringify(result, null, 2);
+        }
+    
+        async function viewPurchased() {
+            const account = document.getElementById('purchasedAccount').value;
+            const password = document.getElementById('purchasedPassword').value;
+    
+            const response = await fetch(`${baseUrl}/purchased/${account}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ password })
+            });
+    
+            const result = await response.json();
+            document.getElementById('purchasedResult').textContent = JSON.stringify(result, null, 2);
+        }
+    
+        async function postComment() {
+            const account = document.getElementById('commentAccount').value;
+            const productId = document.getElementById('commentProductId').value;
+            const rating = parseInt(document.getElementById('commentRating').value);
+            const comment = document.getElementById('commentText').value;
+    
+            const response = await fetch(`${baseUrl}/comment/${account}/${productId}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ rating, comment })
+            });
+    
+            const result = await response.json();
+            document.getElementById('commentResult').textContent = JSON.stringify(result, null, 2);
+        }
+    </script>
+</body>
+</html>
