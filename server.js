@@ -1,7 +1,8 @@
-import express from "express";
+import express, { response } from "express";
 import getResponseCreator from "./response.js";
+import getPersonalInfoCreator from "./personalInfo.js";
 import getProductInfoCreator from "./productInfo.js";
-import fs from "fs";
+import fs, { existsSync } from "fs";
 import cors from "cors"; // for cross-origin requests, could be removed if not needed
 
 const app = express();
@@ -32,6 +33,15 @@ function writeJsonFile(route, data, responseCreator, res) { // Write JSON file w
     res.send(responseCreator.getResponse());
     return false;
   }
+}
+
+function creatPersonalInfo(username, email, phonenum, address) {
+  const personalInfoCreator = getPersonalInfoCreator();
+  personalInfoCreator.setUsername(username);
+  personalInfoCreator.setEmail(email);
+  personalInfoCreator.setPhonenum(phonenum);
+  personalInfoCreator.setAddress(address);
+  return personalInfoCreator.getPersonalInfo();
 }
 
 const productsRoute = "./data/products.json";
@@ -236,30 +246,47 @@ app.get("/product/image/:id", (req, res) => {
 /** GET /product/image:id **/
 
 const accountsRoute = "./data/accounts.json";
+const personalInfosRoute = "./data/personalInfos.json";
 
 // POST
 
 /** POST /register **/
 app.post("/register", (req, res) => {
-  const { account, password } = req.body;
+  const { account, password, username, email, phonenum, address} = req.body;
   const responseCreator = getResponseCreator();
 
-  if (fs.existsSync(accountsRoute)) {
-    const accounts = parseJsonFile(accountsRoute, responseCreator, res);
-    if (!accounts) return;
-
-    if (account in accounts) {
-      responseCreator.setIsSuccess(false);
-      responseCreator.setCause("Account already exists.");
-    } else {
-      accounts[account] = password;
-      const writeAccounts = writeJsonFile(accountsRoute, accounts, responseCreator, res);
-      if(!writeAccounts) return;
-      responseCreator.setIsSuccess(true);
-    }
-  } else { // if accounts.json does not exist
+  if (!fs.existsSync(accountsRoute)) {
     responseCreator.setIsSuccess(false);
     responseCreator.setCause(`${accountsRoute} does not exist.`);
+    return res.send(responseCreator.getResponse());
+  }
+
+  const accounts = parseJsonFile(accountsRoute, responseCreator, res);
+  if (!accounts) return;
+
+  if (!fs.existsSync(personalInfosRoute)) {
+    responseCreator.setIsSuccess(false);
+    responseCreator.setCause(`${personalInfosRoute} does not exist.`);
+    return res.send(responseCreator.getResponse());
+  }
+
+  const personalInfos = parseJsonFile(personalInfosRoute, responseCreator, res);
+  if (!personalInfos) return;
+
+  if (account in accounts) {
+    responseCreator.setIsSuccess(false);
+    responseCreator.setCause("Account already exists.");
+  } else {
+    accounts[account] = password;
+    const writeAccounts = writeJsonFile(accountsRoute, accounts, responseCreator, res);
+    if(!writeAccounts) return;
+
+    const personalInfo = creatPersonalInfo(username, email, phonenum, address);
+    personalInfos[account] = personalInfo;
+    const writePersonalInfos = writeJsonFile(personalInfosRoute, personalInfos, responseCreator, res);
+    if(!writePersonalInfos) return;
+
+    responseCreator.setIsSuccess(true);
   }
 
 return res.send(responseCreator.getResponse());
@@ -271,19 +298,30 @@ app.post("/login", (req, res) => {
   const { account, password } = req.body;
   const responseCreator = getResponseCreator();
 
-  if (fs.existsSync(accountsRoute)) {
-    const accounts = parseJsonFile(accountsRoute, responseCreator, res);
-    if (!accounts) return;
-
-    if (account in accounts && accounts[account] === password) {
-      responseCreator.setIsSuccess(true);
-    } else {
-      responseCreator.setIsSuccess(false);
-      responseCreator.setCause("Wrong account or password.");
-    }
-  } else { // if accounts.json does not exist
+  if (!fs.existsSync(accountsRoute)) {
     responseCreator.setIsSuccess(false);
     responseCreator.setCause(`${accountsRoute} does not exist.`);
+    return res.send(responseCreator.getResponse());
+  }
+  
+  const accounts = parseJsonFile(accountsRoute, responseCreator, res);
+  if (!accounts) return;
+
+  if(!fs.existsSync(personalInfosRoute)) {
+    responseCreator.setIsSuccess(false);
+    responseCreator.setCause(`${personalInfosRoute} does not exist.`);
+    return res.send(responseCreator.getResponse());
+  }
+
+  const personalInfos = parseJsonFile(personalInfosRoute, responseCreator, res);
+  if (!personalInfos) return;
+
+  if (!(account in accounts) || accounts[account] !== password) {
+    responseCreator.setIsSuccess(false);
+    responseCreator.setCause("Wrong account or password.");
+  } else {
+    responseCreator.setPersonalInfos(personalInfos[account]);
+    responseCreator.setIsSuccess(true);
   }
 
 return res.send(responseCreator.getResponse());

@@ -22,7 +22,7 @@
 ```
 {
   "isSuccess": Boolean,
-  "productInfos": [ProductInfo],
+  "productInfos": ProductInfo or [ProductInfo, ...],
   "cause": String
 }
 ```
@@ -45,12 +45,16 @@ image.img
 #### /post/
 
 ##### 1.註冊:
-- /register -> accounts.json
+- /register -> accounts.json 和 personalInfos.json
 > request:
 ```
 {
   "account": String,
-  "password": String
+  "password": String,
+  "username": String,
+  "email": String,
+  "phonenum": String,
+  "address": String
 }
 ```
 > response:
@@ -74,6 +78,7 @@ image.img
 ```
 {
   "isSuccess": Boolean,
+  "personalInfos": personalInfos[account],
   "cause": String
 }
 ```
@@ -83,14 +88,14 @@ image.img
 > request:
 ```
 {
-  "filters": [String...]
+  "filters": [String, ...]
 }
 ```
 > response:
 ```
 {
   "isSuccess": Boolean,
-  "productInfos": [ProductInfo],
+  "productInfos": [ProductInfo, ...],
   "cause": String
 }
 ```
@@ -106,7 +111,7 @@ image.img
 ```
 {
   "isSuccess": Boolean,
-  "productInfos": [ProductInfo] // 此處 ProductInfo.amount 紀錄的是該商品加入購物車的數量
+  "productInfos": [ProductInfo, ...] // 此處 ProductInfo.amount 紀錄的是該商品加入購物車的數量
   "cause": String
 }
 ```
@@ -153,9 +158,9 @@ image.img
 ```
 {
   "isSuccess": Boolean,
-  "productInfos": [ProductInfo], // 此處 ProductInfo.amount 紀錄的是該商品的已購買數量
-                                 // 此處的 ProductInfo 會多一個 "isComment" key 紀錄此 account 是否對此 product comment 過,
-                                 // archived product 的 "isComment" 設為 True
+  "productInfos": [ProductInfo, ...], // 此處 ProductInfo.amount 紀錄的是該商品的已購買數量
+                                      // 此處的 ProductInfo 會多一個 "isComment" key 紀錄此 account 是否對此 product comment 過,
+                                      // archived product 的 "isComment" 設為 True
   "cause": String
 }
 ```
@@ -182,8 +187,12 @@ image.img
 {
   "account": String,
   "password": String,
-  "filters": [String...],
-  "products": [{id: String, amount: Int}...],
+  "username": Stirng,
+  "email": String,
+  "phonenum": String,
+  "address": String,
+  "filters": [String, ...],
+  "products": [{id: String, amount: Int}, ...],
   "comment": String
 }
 ```
@@ -191,21 +200,31 @@ image.img
 ```
 {
   "isSuccess": Boolean,
-  "productInfos": [ProductInfo],
+  "personalInfos": PersonalInfo or [PersonalInfo, ...],
+  "productInfos": ProductInfo or [ProductInfo, ...],
   "cause": String,
-  "comments": [String...]
+  "comments": [Object, ...]
 }
 ```
 ##### ProductInfo
 ```
 {
-  "id": String,                 // unique for each product
+  "id": String,                    // unique for each product
   "name": String,
   "price": Int,
   "author": String,
   "summary": String,
-  "amount": Int,                // available amount, purchased amount or amounts in cart.
-  "categories":  [String...],    // array
+  "amount": Int,                   // available amount, purchased amount or amounts in cart.
+  "categories":  [String, ...],    // array
+}
+```
+##### PersonalInfo
+```
+{
+  "username": String,
+  "email": String,
+  "phonenum": String,
+  "address": String
 }
 ```
 
@@ -222,7 +241,14 @@ image.img
   "account": password,
   ...
 }
-
+```
+- personalInfos.json
+```
+{
+  "account": PersonalInfo,
+  ...
+}
+```
 - cart-\<account\>.json
 ```
 {
@@ -254,7 +280,7 @@ image.img
 - product-\<id\>.json
 - archived/product-\<id\>.json (保留下架的 product 使購買紀錄能正確顯示)
 ```
-see ProductInfo
+ProductInfo
 ```
 - comment-\<id\>.json
 ```
@@ -270,7 +296,7 @@ see ProductInfo
   ...
 }
 ```
-- cause.json -> array
+- cause.json -> array (maybe)
 ```
 {
   "cause": cause,
@@ -290,7 +316,7 @@ see ProductInfo
 ##### P.S: 我們將 image 的 request 獨立出來，這樣 response 的格式會比較單純。
 
 ### 四、檔案管理：
-1. accounts.json 和 products.json 必須存在且格式正確 (可為空 Object) <br>
-2. 所有 productID in products.json 都必須有相對應的 product-\<id\>.json
-3. 所有 account in accounts.json 都必須有相對應的 purchased-\<account\>.json
-4. 每日午夜手動刪除 viewcounts.json，並用前三多 counts 的 productID 更新 recommendations.json
+1. accounts.json、personalInfos.json 和 products.json 必須存在且格式正確 (可為空 Object) <br>
+2. 所有 productID in products.json 都必須有相對應的 product-\<id\>.json <br>
+3. 所有 account in accounts.json 都必須有相對應的 account in personalInfos.json 和 purchased-\<account\>.json <br>
+4. 每日午夜手動刪除 viewcounts.json，並用前三多 counts 的 productID 手動更新 recommendations.json <br>

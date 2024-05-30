@@ -44,7 +44,7 @@
     </style>
 </head>
 <body>
-    <h1>WebAppServer Frontend</h1>
+    <h1>WebAppServer Frontend Testing</h1>
 
     <div class="container">
         <h2>Register</h2>
@@ -52,6 +52,14 @@
         <input type="text" id="registerAccount">
         <label for="registerPassword">Password</label>
         <input type="password" id="registerPassword">
+        <label for="registerUsername">Username</label>
+        <input type="text" id="registerUsername">
+        <label for="registerEmail">Email</label>
+        <input type="email" id="registerEmail">
+        <label for="registerPhone">Phone Number</label>
+        <input type="tel" id="registerPhone">
+        <label for="registerAddress">Address</label>
+        <input type="text" id="registerAddress">
         <button onclick="register()">Register</button>
         <div id="registerResult" class="result"></div>
     </div>
@@ -162,11 +170,15 @@
         async function register() {
             const account = document.getElementById('registerAccount').value;
             const password = document.getElementById('registerPassword').value;
+            const username = document.getElementById('registerUsername').value;
+            const email = document.getElementById('registerEmail').value;
+            const phonenum = document.getElementById('registerPhone').value;
+            const address = document.getElementById('registerAddress').value;
 
             const response = await fetch(`${baseUrl}/register`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ account, password })
+                body: JSON.stringify({ account, password, username, email, phonenum, address })
             });
 
             const result = await response.json();
@@ -186,7 +198,7 @@
             const result = await response.json();
             document.getElementById('loginResult').textContent = JSON.stringify(result, null, 2);
         }
-
+        
         async function getProduct() {
             const productId = document.getElementById('productId').value;
             const url = productId ? `${baseUrl}/product/${productId}` : `${baseUrl}/product`;

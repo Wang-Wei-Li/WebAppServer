@@ -1,9 +1,10 @@
 class Response {
-  constructor(isSuccess, cause, productInfos, comments) {
-    this.isSuccess = isSuccess;
-    this.cause = cause;
-    this.productInfos = productInfos; // product's information; array
-    this.comments = comments;         // product's comments; array
+  constructor(isSuccess, cause, personalInfos, productInfos, comments) {
+    this.isSuccess = isSuccess;                // success or fail; boolean
+    this.cause = cause;                        // cause of fail or warning; string
+    this.personalInfos = personalInfos;        // user's information; object
+    this.productInfos = productInfos;          // product's information; array
+    this.comments = comments;                  // product's comments; array
   }
 }
 
@@ -11,6 +12,7 @@ class ResponseCreator {
   constructor() {
     this.isSuccess = null;
     this.cause = null;
+    this.personalInfos = null;
     this.productInfos = null;
     this.comments = null;
   }
@@ -21,6 +23,9 @@ class ResponseCreator {
   setCause(cause) {
     this.cause = cause;
   }
+  setPersonalInfos(personalInfos) {
+    this.personalInfos = personalInfos;
+  }
   setProductInfos(productInfos) {
     this.productInfos = productInfos;
   }
@@ -29,7 +34,7 @@ class ResponseCreator {
   }
 
   getResponse() {
-    return new Response(this.isSuccess, this.cause, this.productInfos, this.comments);
+    return new Response(this.isSuccess, this.cause, this.personalInfos, this.productInfos, this.comments);
   }
 
   static getCreator() {
