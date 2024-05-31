@@ -4,5 +4,23 @@
         "email":"JohnDoe20040220@gmail.com",
         "phonenum":"0912345678",
         "address":"10617台北市大安區羅斯福路四段1號"
+    },
+    "Benson0918":{
+        "username":"Benson",
+        "email":"my961130567@gmail.com",
+        "phonenum":"0961130567",
+        "address":"33017桃園市桃園區大業路一段145號"
+    },
+    "Alice123":{
+        "username":"Alice",
+        "email":"Alice1231230@gmail.com",
+        "phonenum":"0910305578",
+        "address":"22147新北市汐止區樟樹一路198巷39號"
+    },
+    "JaneSmith456":{
+        "username":"Jane Smith",
+        "email":"JaneSmith456456@gmail.com",
+        "phonenum":"0919456456",
+        "address":"台北市大安區和平東路二段76巷19弄3-7號"
     }
 }
