@@ -359,48 +359,50 @@ app.post("/product", (req, res) => {
   const { filters } = req.body;
   const responseCreator = getResponseCreator();
 
-  if (fs.existsSync(productsRoute)) {
-    const products = parseJsonFile(productsRoute, responseCreator, res);
-    if (!products) return;
+  if (!fs.existsSync(productsRoute)) {
+    responseCreator.setIsSuccess(false);
+    responseCreator.setCause(`${productsRoute} does not exist.`);
+    return res.send(responseCreator.getResponse());
+  }
+  
+  const products = parseJsonFile(productsRoute, responseCreator, res);
+  if (!products) return;
 
-    let productInfos = [];
+  let productInfos = [];
 
-    const productsArray = Object.keys(products);
-    for (const productId of productsArray) {
-      let productRoute = productRoutePrefix + productId + productRouteSuffix;
-      if (fs.existsSync(productRoute)) {
-        let productInfo = parseJsonFile(productRoute, responseCreator, res);
-        if (!productInfo) return;
+  const productsArray = Object.keys(products);
+  for (const productId of productsArray) {
+    let productRoute = productRoutePrefix + productId + productRouteSuffix;
+    if (fs.existsSync(productRoute)) {
+      let productInfo = parseJsonFile(productRoute, responseCreator, res);
+      if (!productInfo) return;
 
-        let matchAllFilters = true;
-        for (const filter of filters) {
-          let match = false;
-          for (const category of productInfo["categories"]) {
-            if (filter == category) {
-              match = true;
-              break;
-            }
-          }
-
-          if (!match) {
-            matchAllFilters = false;
+      let matchAllFilters = true;
+      for (const filter of filters) {
+        let match = false;
+        for (const category of productInfo["categories"]) {
+          if (filter == category) {
+            match = true;
             break;
           }
         }
 
-        if (matchAllFilters) {
-          productInfos.push(productInfo);
+        if (!match) {
+          matchAllFilters = false;
+          break;
         }
-      } else {
-        responseCreator.setCause("Some products do not exist. Please remind backend developers.");
       }
+
+      if (matchAllFilters) {
+        productInfos.push(productInfo);
+      }
+    } else {
+      responseCreator.setCause("Some products do not exist. Please remind backend developers.");
     }
-    responseCreator.setIsSuccess(true);
-  } else {
-    responseCreator.setIsSuccess(false);
-    responseCreator.setCause(`${productsRoute} does not exist.`);
   }
+  
   responseCreator.setProductInfos(productInfos);
+  responseCreator.setIsSuccess(true);
 
   return res.send(responseCreator.getResponse());
 });

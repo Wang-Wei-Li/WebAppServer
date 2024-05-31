@@ -100,8 +100,8 @@
 
     <div class="container">
         <h2>Filter Products</h2>
-        <label for="filterCategories">Categories (comma separated, e.g., books,electronics)</label>
-        <input type="text" id="filterCategories">
+        <label for="productFilters">Categories (comma-separated, e.g., electronics,books)</label>
+        <input type="text" id="productFilters" placeholder="Enter categories to filter by">
         <button onclick="filterProducts()">Filter Products</button>
         <div id="filterProductsResult" class="result"></div>
     </div>
@@ -226,9 +226,15 @@
         }
 
         async function filterProducts() {
-            const categories = document.getElementById('filterCategories').value.split(',');
-            
-            const response = await fetch(`${baseUrl}/product?category=${categories.join(',')}`);
+            const filtersInput = document.getElementById('productFilters').value;
+            const filters = filtersInput.split(',').map(filter => filter.trim()); // Split by comma and trim spaces
+    
+            const response = await fetch(`${baseUrl}/product`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ filters })
+            });
+    
             const result = await response.json();
             document.getElementById('filterProductsResult').textContent = JSON.stringify(result, null, 2);
         }
