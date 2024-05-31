@@ -4,22 +4,23 @@ import getPersonalInfoCreator from "./personalInfo.js";
 import getProductInfoCreator from "./productInfo.js";
 import fs, { existsSync } from "fs";
 import cors from "cors"; // for cross-origin requests, could be removed if not needed
+import bcrypt from 'bcryptjs';
 
 const app = express();
 const PORT = 3000;
 
 app.use(cors()); // for cross-origin requests, could be removed if not needed
-app.use(express.urlencoded({extended: true}));
+app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
 function parseJsonFile(route, responseCreator, res) { // Parse JSON file with proper error handling
   try {
-      return JSON.parse(fs.readFileSync(route));
+    return JSON.parse(fs.readFileSync(route));
   } catch (error) {
-      responseCreator.setIsSuccess(false);
-      responseCreator.setCause("Error parsing JSON file: " + error.message);
-      res.send(responseCreator.getResponse()); // Send response from within the function
-      return null; // Return null to indicate failure
+    responseCreator.setIsSuccess(false);
+    responseCreator.setCause("Error parsing JSON file: " + error.message);
+    res.send(responseCreator.getResponse()); // Send response from within the function
+    return null; // Return null to indicate failure
   }
 }
 
@@ -57,18 +58,18 @@ app.get("/product", (req, res) => {
   let productInfos = [];
   if (fs.existsSync(productsRoute)) {
     const products = parseJsonFile(productsRoute, responseCreator, res);
-    if(!products) return;
+    if (!products) return;
 
     const productsArray = Object.keys(products);
-    for(const productId of productsArray) {
+    for (const productId of productsArray) {
       let productRoute = productRoutePrefix + productId + productRouteSuffix;
       if (fs.existsSync(productRoute)) {
         const productInfo = parseJsonFile(productRoute, responseCreator, res);
-        if(!productInfo) return;
+        if (!productInfo) return;
         productInfos.push(productInfo);
       } else {
         responseCreator.setCause("Some products do not exist. Please remind backend developers.");
-        
+
       }
     }
 
@@ -79,7 +80,7 @@ app.get("/product", (req, res) => {
   }
   responseCreator.setProductInfos(productInfos);
 
-return res.send(responseCreator.getResponse());
+  return res.send(responseCreator.getResponse());
 });
 /** GET /product **/
 
@@ -92,23 +93,23 @@ app.get("/product/:id", (req, res) => {
   const productRoute = productRoutePrefix + productId + productRouteSuffix;
 
   let productInfos = [];
-  if(fs.existsSync(productRoute)) {
+  if (fs.existsSync(productRoute)) {
     const productInfo = parseJsonFile(productRoute, responseCreator, res);
-    if(!productInfo) return;
+    if (!productInfo) return;
     productInfos.push(productInfo);
     responseCreator.setIsSuccess(true);
 
-    if(fs.existsSync(viewcountsRoute)) {
+    if (fs.existsSync(viewcountsRoute)) {
       const viewcounts = parseJsonFile(viewcountsRoute, responseCreator, res);
-      if(!viewcounts) return;
+      if (!viewcounts) return;
       viewcounts[productId] += 1;
       const writeVeiwcounts = writeJsonFile(viewcountsRoute, viewcounts, responseCreator, res);
-      if(!writeVeiwcounts) return;
+      if (!writeVeiwcounts) return;
     } else { // if viewcounts.json does not exist, create it
       const createViewcountsJson = {};
       createViewcountsJson[productId] = 1;
       const writeVeiwcounts = writeJsonFile(viewcountsRoute, createViewcountsJson, responseCreator, res);
-      if(!writeVeiwcounts) return;
+      if (!writeVeiwcounts) return;
     }
   } else {
     responseCreator.setIsSuccess(false);
@@ -116,7 +117,7 @@ app.get("/product/:id", (req, res) => {
   }
   responseCreator.setProductInfos(productInfos);
 
-return res.send(responseCreator.getResponse());
+  return res.send(responseCreator.getResponse());
 });
 /** GET /product/:id **/
 
@@ -129,14 +130,14 @@ app.get("/recommendation", (req, res) => {
   let recommendationInfos = [];
   if (fs.existsSync(recommendationsRoute)) {
     const recommendations = parseJsonFile(recommendationsRoute, responseCreator, res);
-    if(!recommendations) return;
+    if (!recommendations) return;
     const recommendationsArray = Object.values(recommendations);
     let isRecommendationsValid = true;
     for (const productId of recommendationsArray) {
       let productRoute = productRoutePrefix + productId + productRouteSuffix;
       if (fs.existsSync(productRoute)) {
         const recommendationInfo = parseJsonFile(productRoute, responseCreator, res);
-        if(!recommendationInfo) return;
+        if (!recommendationInfo) return;
         recommendationInfos.push(recommendationInfo);
       } else {
         responseCreator.setIsSuccess(false);
@@ -151,13 +152,13 @@ app.get("/recommendation", (req, res) => {
     } else {
       recommendationInfos = [];
     }
-  } else { 
+  } else {
     responseCreator.setIsSuccess(false);
     responseCreator.setCause(`${recommendationsRoute} does not exist.`);
   }
   responseCreator.setProductInfos(recommendationInfos);
 
-return res.send(responseCreator.getResponse());
+  return res.send(responseCreator.getResponse());
 });
 /** GET /recommendation **/
 
@@ -192,7 +193,7 @@ app.get("/recommendation/:rank", (req, res) => {
   }
   responseCreator.setProductInfos(productInfos);
 
-return res.send(responseCreator.getResponse());
+  return res.send(responseCreator.getResponse());
 });
 /** GET /recommendation/:rank **/
 
@@ -205,9 +206,9 @@ app.get("/comment/:id", (req, res) => {
   const responseCreator = getResponseCreator();
   const commentRoute = commentsRoutePrefix + productId + commentsRouteSuffix;
 
-  if(fs.existsSync(commentRoute)) {
+  if (fs.existsSync(commentRoute)) {
     const comments = parseJsonFile(commentRoute, responseCreator, res);
-    if(!comments) return;
+    if (!comments) return;
 
     responseCreator.setComments(comments);
     responseCreator.setIsSuccess(true);
@@ -217,7 +218,7 @@ app.get("/comment/:id", (req, res) => {
   }
 
 
-return res.send(responseCreator.getResponse());
+  return res.send(responseCreator.getResponse());
 });
 /** GET /comment/:id **/
 
@@ -233,9 +234,9 @@ app.get("/product/image/:id", (req, res) => {
   const productId = req.params.id;
   const imageRoute = directoryPath + `/data/image-${productId}.png`;
 
-  if(fs.existsSync(imageRoute)) {
+  if (fs.existsSync(imageRoute)) {
     res.sendFile(imageRoute, (err) => {
-      if(err) {
+      if (err) {
         console.log("Error of Sending File: ", err);
       }
     });
@@ -252,7 +253,7 @@ const personalInfosRoute = "./data/personalInfos.json";
 
 /** POST /register **/
 app.post("/register", (req, res) => {
-  const { account, password, username, email, phonenum, address} = req.body;
+  const { account, password, username, email, phonenum, address } = req.body;
   const responseCreator = getResponseCreator();
 
   if (!fs.existsSync(accountsRoute)) {
@@ -277,19 +278,30 @@ app.post("/register", (req, res) => {
     responseCreator.setIsSuccess(false);
     responseCreator.setCause("Account already exists.");
   } else {
-    accounts[account] = password;
+    // hash the password
+    const saltRounds = 10;
+    try {
+      const salt = bcrypt.genSaltSync(saltRounds);
+      const hashP = bcrypt.hashSync(password, salt);
+      console.log(password)
+      console.log(hashP)
+      accounts[account] = hashP;
+    } catch (error) {
+      console.log('Error hashing password:', error);
+    }
+
     const writeAccounts = writeJsonFile(accountsRoute, accounts, responseCreator, res);
-    if(!writeAccounts) return;
+    if (!writeAccounts) return;
 
     const personalInfo = creatPersonalInfo(username, email, phonenum, address);
     personalInfos[account] = personalInfo;
     const writePersonalInfos = writeJsonFile(personalInfosRoute, personalInfos, responseCreator, res);
-    if(!writePersonalInfos) return;
+    if (!writePersonalInfos) return;
 
     responseCreator.setIsSuccess(true);
   }
 
-return res.send(responseCreator.getResponse());
+  return res.send(responseCreator.getResponse());
 });
 /** POST /register **/
 
@@ -303,11 +315,11 @@ app.post("/login", (req, res) => {
     responseCreator.setCause(`${accountsRoute} does not exist.`);
     return res.send(responseCreator.getResponse());
   }
-  
+
   const accounts = parseJsonFile(accountsRoute, responseCreator, res);
   if (!accounts) return;
 
-  if(!fs.existsSync(personalInfosRoute)) {
+  if (!fs.existsSync(personalInfosRoute)) {
     responseCreator.setIsSuccess(false);
     responseCreator.setCause(`${personalInfosRoute} does not exist.`);
     return res.send(responseCreator.getResponse());
@@ -316,15 +328,29 @@ app.post("/login", (req, res) => {
   const personalInfos = parseJsonFile(personalInfosRoute, responseCreator, res);
   if (!personalInfos) return;
 
-  if (!(account in accounts) || accounts[account] !== password) {
+  if (!(account in accounts)) {
     responseCreator.setIsSuccess(false);
-    responseCreator.setCause("Wrong account or password.");
-  } else {
-    responseCreator.setPersonalInfos(personalInfos[account]);
-    responseCreator.setIsSuccess(true);
+    responseCreator.setCause("Wrong account.");
+    return res.send(responseCreator.getResponse());
   }
 
-return res.send(responseCreator.getResponse());
+  const storedHashedPassword = accounts[account];
+  bcrypt.compare(password, storedHashedPassword, (err, result) => {
+    if (err) {
+      responseCreator.setIsSuccess(false);
+      responseCreator.setCause("Error during authentication.");
+    } else if (result) {
+      // Passwords match, authentication successful
+      responseCreator.setPersonalInfos(personalInfos[account]);
+      responseCreator.setPassword(storedHashedPassword);
+      responseCreator.setIsSuccess(true);
+    } else {
+      // Passwords don't match, authentication failed
+      responseCreator.setIsSuccess(false);
+      responseCreator.setCause("Wrong password.");
+    }
+    return res.send(responseCreator.getResponse());
+  });
 });
 /** POST /login **/
 
@@ -335,34 +361,34 @@ app.post("/product", (req, res) => {
 
   if (fs.existsSync(productsRoute)) {
     const products = parseJsonFile(productsRoute, responseCreator, res);
-    if(!products) return;
-    
+    if (!products) return;
+
     let productInfos = [];
 
     const productsArray = Object.keys(products);
-    for(const productId of productsArray) {
+    for (const productId of productsArray) {
       let productRoute = productRoutePrefix + productId + productRouteSuffix;
       if (fs.existsSync(productRoute)) {
         let productInfo = parseJsonFile(productRoute, responseCreator, res);
-        if(!productInfo) return;
-        
+        if (!productInfo) return;
+
         let matchAllFilters = true;
-        for(const filter of filters) {
+        for (const filter of filters) {
           let match = false;
-          for(const category of productInfo["categories"]) {
-            if(filter == category) {
+          for (const category of productInfo["categories"]) {
+            if (filter == category) {
               match = true;
               break;
             }
           }
-          
-          if(!match) {
+
+          if (!match) {
             matchAllFilters = false;
             break;
           }
         }
-        
-        if(matchAllFilters) {
+
+        if (matchAllFilters) {
           productInfos.push(productInfo);
         }
       } else {
@@ -375,8 +401,8 @@ app.post("/product", (req, res) => {
     responseCreator.setCause(`${productsRoute} does not exist.`);
   }
   responseCreator.setProductInfos(productInfos);
-  
-return res.send(responseCreator.getResponse());
+
+  return res.send(responseCreator.getResponse());
 });
 /** POST /product **/
 
@@ -393,16 +419,16 @@ app.post("/cart/:account", (req, res) => {
   if (fs.existsSync(accountsRoute)) {
     const accounts = parseJsonFile(accountsRoute, responseCreator, res);
     if (!accounts) return;
-    
-    if((account in accounts) && accounts[account] === password) {
+
+    if ((account in accounts) && accounts[account] === password) {
       const cartRoute = cartRoutePrefix + account + cartRouteSuffix;
-      if(fs.existsSync(cartRoute)) {
+      if (fs.existsSync(cartRoute)) {
         const cart = parseJsonFile(cartRoute, responseCreator, res);
         if (!cart) return;
-        
+
         let allProductsExist = true;
         const cartArray = Object.keys(cart);
-        for(const productId of cartArray) {
+        for (const productId of cartArray) {
           let productRoute = productRoutePrefix + productId + productRouteSuffix;
           if (fs.existsSync(productRoute)) {
             let productInfo = parseJsonFile(productRoute, responseCreator, res);
@@ -432,7 +458,7 @@ app.post("/cart/:account", (req, res) => {
   }
   responseCreator.setProductInfos(productInfos);
 
-return res.send(responseCreator.getResponse());
+  return res.send(responseCreator.getResponse());
 });
 /** POST /cart/:account **/
 
@@ -445,7 +471,7 @@ app.post("/cart/change/:account", (req, res) => {
   if (fs.existsSync(accountsRoute)) {
     const accounts = parseJsonFile(accountsRoute, responseCreator, res);
     if (!accounts) return;
-    if((account in accounts) && accounts[account] === password) {
+    if ((account in accounts) && accounts[account] === password) {
       const cartRoute = cartRoutePrefix + account + cartRouteSuffix;
 
       let cart = {};
@@ -454,18 +480,18 @@ app.post("/cart/change/:account", (req, res) => {
         if (!cart) return;
       }
 
-      for(const { id, amount } of products) {
-        if(id in cart) {
+      for (const { id, amount } of products) {
+        if (id in cart) {
           cart[id] += amount;
         } else {
           cart[id] = amount;
         }
-        
+
         if (cart[id] <= 0) {
           delete cart[id];
         }
       }
-      
+
       if (Object.keys(cart).length === 0) { // if cart is empty
         if (fs.existsSync(cartRoute)) {
           fs.unlinkSync(cartRoute); // delete the cart file
@@ -486,7 +512,7 @@ app.post("/cart/change/:account", (req, res) => {
     responseCreator.setCause(`${accountsRoute} does not exist.`);
   }
 
-return res.send(responseCreator.getResponse());
+  return res.send(responseCreator.getResponse());
 });
 /** POST /cart/change/:account **/
 
@@ -542,7 +568,7 @@ app.post("/purchased/:account", (req, res) => {
           productInfo.isComment = purchasedItems[productId][1]; // Set the isComment for the product
           productInfos.push(productInfo);
         }
-        
+
         responseCreator.setIsSuccess(allProductsExist);
       } else {
         responseCreator.setIsSuccess(false);
@@ -558,7 +584,7 @@ app.post("/purchased/:account", (req, res) => {
   }
   responseCreator.setProductInfos(productInfos);
 
-return res.send(responseCreator.getResponse());
+  return res.send(responseCreator.getResponse());
 });
 /** POST /purchased/:account **/
 
@@ -589,7 +615,7 @@ app.post("/cart/submit/:account", (req, res) => {
     responseCreator.setCause("Cart is empty.");
     return res.send(responseCreator.getResponse());
   }
-  
+
   const cart = parseJsonFile(cartRoute, responseCreator, res);
   if (!cart) return;
 
@@ -620,10 +646,10 @@ app.post("/cart/submit/:account", (req, res) => {
     responseCreator.setCause(`${purchasedRoute} does not exist.`);
     return res.send(responseCreator.getResponse());
   }
-  
+
   const purchasedItems = parseJsonFile(purchasedRoute, responseCreator, res);
   if (!purchasedItems) return;
-  
+
   for (const productId in boughtItems) { // Update the product amount and purchased items
     let productRoute = productRoutePrefix + productId + productRouteSuffix;
     let productInfo = parseJsonFile(productRoute, responseCreator, res);
@@ -646,22 +672,22 @@ app.post("/cart/submit/:account", (req, res) => {
   fs.unlinkSync(cartRoute); // Delete the cart file
   responseCreator.setIsSuccess(true);
 
-return res.send(responseCreator.getResponse());
+  return res.send(responseCreator.getResponse());
 });
 /** POST /cart/submit/:account **/
 
 /** POST /comment/:account/:id **/
 app.post("/comment/:account/:id", (req, res) => {
   const { account, id } = req.params;
-  const { rating , comment } = req.body;
+  const { rating, comment } = req.body;
   const responseCreator = getResponseCreator();
 
   if (!comment) {
     responseCreator.setIsSuccess(false);
     responseCreator.setCause("Comment cannot be empty.");
     return res.send(responseCreator.getResponse());
-  } 
-  
+  }
+
   if (!fs.existsSync(accountsRoute)) {
     responseCreator.setIsSuccess(false);
     responseCreator.setCause(`${accountsRoute} does not exist.`);
@@ -670,7 +696,7 @@ app.post("/comment/:account/:id", (req, res) => {
 
   const accounts = parseJsonFile(accountsRoute, responseCreator, res);
   if (!accounts) return;
-  
+
   if (!(account in accounts)) {
     responseCreator.setIsSuccess(false);
     responseCreator.setCause("Account does not exist.");
@@ -704,23 +730,23 @@ app.post("/comment/:account/:id", (req, res) => {
     } else {
       comments[account] = [rating, comment];
       const writeComments = writeJsonFile(commentRoute, comments, responseCreator, res);
-      if(!writeComments) return;
+      if (!writeComments) return;
       purchasedItems[id][1] = true; // Set isComment to true
       const writePurchased = writeJsonFile(purchasedRoute, purchasedItems, responseCreator, res);
-      if(!writePurchased) return;
+      if (!writePurchased) return;
       responseCreator.setIsSuccess(true);
     }
   } else {
-    const createCommentsJson = {[account] : [rating, comment]};
+    const createCommentsJson = { [account]: [rating, comment] };
     const writeComments = writeJsonFile(commentRoute, createCommentsJson, responseCreator, res);
-    if(!writeComments) return;
+    if (!writeComments) return;
     purchasedItems[id][1] = true; // Set isComment to true
     const writePurchased = writeJsonFile(purchasedRoute, purchasedItems, responseCreator, res);
-    if(!writePurchased) return;
+    if (!writePurchased) return;
     responseCreator.setIsSuccess(true);
     responseCreator.setCause("Comment has been created.");
   }
-  
+
   return res.send(responseCreator.getResponse());
 });
 /** POST /comment/:account/:id **/
