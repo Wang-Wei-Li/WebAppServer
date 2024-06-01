@@ -92,10 +92,10 @@
 
     <div class="container">
         <h2>Get Comments</h2>
-        <label for="commentProductId">Product ID</label>
-        <input type="text" id="commentProductId">
+        <label for="getCommentProductId">Product ID</label>
+        <input type="text" id="getCommentProductId">
         <button onclick="getComments()">Get Comments</button>
-        <div id="commentsResult" class="result"></div>
+        <div id="getCommentsResult" class="result"></div>
     </div>
 
     <div class="container">
@@ -152,16 +152,16 @@
     
     <div class="container">
         <h2>Post Comment</h2>
-        <label for="commentAccount">Account</label>
-        <input type="text" id="commentAccount">
-        <label for="commentProductId">Product ID</label>
-        <input type="text" id="commentProductId">
-        <label for="commentRating">Rating</label>
-        <input type="number" id="commentRating" min="1" max="5">
-        <label for="commentText">Comment</label>
-        <textarea id="commentText"></textarea>
+        <label for="postCommentAccount">Account</label>
+        <input type="text" id="postCommentAccount">
+        <label for="postCommentProductId">Product ID</label>
+        <input type="text" id="postCommentProductId">
+        <label for="postCommentRating">Rating</label>
+        <input type="number" id="postCommentRating" min="1" max="5">
+        <label for="postCommentText">Comment</label>
+        <textarea id="postCommentText"></textarea>
         <button onclick="postComment()">Post Comment</button>
-        <div id="commentResult" class="result"></div>
+        <div id="postCommentResult" class="result"></div>
     </div>    
 
     <script>
@@ -218,11 +218,11 @@
         }
 
         async function getComments() {
-            const productId = document.getElementById('commentProductId').value;
+            const productId = document.getElementById('getCommentProductId').value;
 
             const response = await fetch(`${baseUrl}/comment/${productId}`);
             const result = await response.json();
-            document.getElementById('commentsResult').textContent = JSON.stringify(result, null, 2);
+            document.getElementById('getCommentsResult').textContent = JSON.stringify(result, null, 2);
         }
 
         async function filterProducts() {
@@ -305,11 +305,13 @@
         }
     
         async function postComment() {
-            const account = document.getElementById('commentAccount').value;
-            const productId = document.getElementById('commentProductId').value;
-            const rating = parseInt(document.getElementById('commentRating').value);
-            const comment = document.getElementById('commentText').value;
-    
+            const account = document.getElementById('postCommentAccount').value;
+            const productId = document.getElementById('postCommentProductId').value;
+            const rating = parseInt(document.getElementById('postCommentRating').value);
+            const comment = document.getElementById('postCommentText').value;
+
+            console.log(account, productId, rating, comment)
+
             const response = await fetch(`${baseUrl}/comment/${account}/${productId}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -317,7 +319,7 @@
             });
     
             const result = await response.json();
-            document.getElementById('commentResult').textContent = JSON.stringify(result, null, 2);
+            document.getElementById('postCommentResult').textContent = JSON.stringify(result, null, 2);
         }
     </script>
 </body>

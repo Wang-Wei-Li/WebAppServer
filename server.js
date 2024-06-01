@@ -721,33 +721,33 @@ app.post("/comment/:account/:id", (req, res) => {
     return res.send(responseCreator.getResponse());
   }
 
+  if (purchasedItems[id][1]) {
+    responseCreator.setIsSuccess(false);
+    responseCreator.setCause("Account has commented before, or the product is archived.");
+    return res.send(responseCreator.getResponse());
+  }
+
   const commentRoute = commentsRoutePrefix + id + commentsRouteSuffix;
-  if (fs.existsSync(commentRoute)) {
+  if (!fs.existsSync(commentRoute)) {
+    const createCommentsJson = { [account]: [rating, comment] }; // Create a new comment JSON file
+    const writeComments = writeJsonFile(commentRoute, createCommentsJson, responseCreator, res);
+    if (!writeComments) return;
+
+    responseCreator.setCause("Comment has been created.");
+  } else {
     const comments = parseJsonFile(commentRoute, responseCreator, res);
     if (!comments) return;
 
-    if (comments[account]) {
-      responseCreator.setIsSuccess(false);
-      responseCreator.setCause("Account has commented before.");
-    } else {
-      comments[account] = [rating, comment];
-      const writeComments = writeJsonFile(commentRoute, comments, responseCreator, res);
-      if (!writeComments) return;
-      purchasedItems[id][1] = true; // Set isComment to true
-      const writePurchased = writeJsonFile(purchasedRoute, purchasedItems, responseCreator, res);
-      if (!writePurchased) return;
-      responseCreator.setIsSuccess(true);
-    }
-  } else {
-    const createCommentsJson = { [account]: [rating, comment] };
-    const writeComments = writeJsonFile(commentRoute, createCommentsJson, responseCreator, res);
+    comments[account] = [rating, comment];
+    const writeComments = writeJsonFile(commentRoute, comments, responseCreator, res);
     if (!writeComments) return;
-    purchasedItems[id][1] = true; // Set isComment to true
-    const writePurchased = writeJsonFile(purchasedRoute, purchasedItems, responseCreator, res);
-    if (!writePurchased) return;
-    responseCreator.setIsSuccess(true);
-    responseCreator.setCause("Comment has been created.");
   }
+
+  purchasedItems[id][1] = true; // Set isComment to true
+  const writePurchased = writeJsonFile(purchasedRoute, purchasedItems, responseCreator, res);
+  if (!writePurchased) return;
+  
+  responseCreator.setIsSuccess(true);
 
   return res.send(responseCreator.getResponse());
 });
