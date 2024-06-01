@@ -92,30 +92,37 @@ app.get("/product/:id", (req, res) => {
   const responseCreator = getResponseCreator();
   const productRoute = productRoutePrefix + productId + productRouteSuffix;
 
-  let productInfos = [];
-  if (fs.existsSync(productRoute)) {
-    const productInfo = parseJsonFile(productRoute, responseCreator, res);
-    if (!productInfo) return;
-    productInfos.push(productInfo);
-    responseCreator.setIsSuccess(true);
-
-    if (fs.existsSync(viewcountsRoute)) {
-      const viewcounts = parseJsonFile(viewcountsRoute, responseCreator, res);
-      if (!viewcounts) return;
-      viewcounts[productId] += 1;
-      const writeVeiwcounts = writeJsonFile(viewcountsRoute, viewcounts, responseCreator, res);
-      if (!writeVeiwcounts) return;
-    } else { // if viewcounts.json does not exist, create it
-      const createViewcountsJson = {};
-      createViewcountsJson[productId] = 1;
-      const writeVeiwcounts = writeJsonFile(viewcountsRoute, createViewcountsJson, responseCreator, res);
-      if (!writeVeiwcounts) return;
-    }
-  } else {
+  if (!fs.existsSync(productRoute)) {
     responseCreator.setIsSuccess(false);
     responseCreator.setCause(`${productRoute} does not exist.`);
+    return res.send(responseCreator.getResponse());
   }
+
+  const productInfo = parseJsonFile(productRoute, responseCreator, res);
+  if (!productInfo) return;
+
+  let productInfos = [];
+  productInfos.push(productInfo);
+
+  if (fs.existsSync(viewcountsRoute)) {
+    const viewcounts = parseJsonFile(viewcountsRoute, responseCreator, res);
+    if (!viewcounts) return;
+
+    if (!(productId in viewcounts)) viewcounts[productId] = 0; // initialize viewcount if productId does not exist
+
+    viewcounts[productId] += 1;
+    const writeVeiwcounts = writeJsonFile(viewcountsRoute, viewcounts, responseCreator, res);
+    if (!writeVeiwcounts) return;
+  } else { // if viewcounts.json does not exist, create it
+    const createViewcountsJson = {};
+
+    createViewcountsJson[productId] = 1;
+    const writeVeiwcounts = writeJsonFile(viewcountsRoute, createViewcountsJson, responseCreator, res);
+    if (!writeVeiwcounts) return;
+  }
+
   responseCreator.setProductInfos(productInfos);
+  responseCreator.setIsSuccess(true);
 
   return res.send(responseCreator.getResponse());
 });
@@ -251,6 +258,9 @@ const personalInfosRoute = "./data/personalInfos.json";
 
 // POST
 
+const purchasedRoutePrefix = "./data/purchased-";
+const purchasedRouteSuffix = ".json";
+
 /** POST /register **/
 app.post("/register", (req, res) => {
   const { account, password, username, email, phonenum, address } = req.body;
@@ -265,6 +275,12 @@ app.post("/register", (req, res) => {
   const accounts = parseJsonFile(accountsRoute, responseCreator, res);
   if (!accounts) return;
 
+  if (account in accounts) {
+    responseCreator.setIsSuccess(false);
+    responseCreator.setCause("Account already exists.");
+    return res.send(responseCreator.getResponse());
+  }
+
   if (!fs.existsSync(personalInfosRoute)) {
     responseCreator.setIsSuccess(false);
     responseCreator.setCause(`${personalInfosRoute} does not exist.`);
@@ -274,32 +290,33 @@ app.post("/register", (req, res) => {
   const personalInfos = parseJsonFile(personalInfosRoute, responseCreator, res);
   if (!personalInfos) return;
 
-  if (account in accounts) {
-    responseCreator.setIsSuccess(false);
-    responseCreator.setCause("Account already exists.");
-  } else {
-    // hash the password
-    const saltRounds = 10;
-    try {
-      const salt = bcrypt.genSaltSync(saltRounds);
-      const hashP = bcrypt.hashSync(password, salt);
-      console.log(password)
-      console.log(hashP)
-      accounts[account] = hashP;
-    } catch (error) {
-      console.log('Error hashing password:', error);
-    }
-
-    const writeAccounts = writeJsonFile(accountsRoute, accounts, responseCreator, res);
-    if (!writeAccounts) return;
-
-    const personalInfo = creatPersonalInfo(username, email, phonenum, address);
-    personalInfos[account] = personalInfo;
-    const writePersonalInfos = writeJsonFile(personalInfosRoute, personalInfos, responseCreator, res);
-    if (!writePersonalInfos) return;
-
-    responseCreator.setIsSuccess(true);
+  // hash the password
+  const saltRounds = 10;
+  try {
+    const salt = bcrypt.genSaltSync(saltRounds);
+    const hashP = bcrypt.hashSync(password, salt);
+    console.log(password)
+    console.log(hashP)
+    accounts[account] = hashP;
+  } catch (error) {
+    console.log('Error hashing password:', error);
   }
+
+  const writeAccounts = writeJsonFile(accountsRoute, accounts, responseCreator, res);
+  if (!writeAccounts) return;
+
+  const personalInfo = creatPersonalInfo(username, email, phonenum, address);
+  personalInfos[account] = personalInfo;
+  const writePersonalInfos = writeJsonFile(personalInfosRoute, personalInfos, responseCreator, res);
+  if (!writePersonalInfos) return;
+
+  const purchasedRoute = purchasedRoutePrefix + account + purchasedRouteSuffix;
+
+  const createPurchasedJson = {};
+  const writePurchased = writeJsonFile(purchasedRoute, createPurchasedJson, responseCreator, res);
+  if (!writePurchased) return;
+
+  responseCreator.setIsSuccess(true);
 
   return res.send(responseCreator.getResponse());
 });
@@ -520,9 +537,6 @@ app.post("/cart/change/:account", (req, res) => {
 
 const archivedProductRoutePrefix = "./data/archived/product-";
 
-const purchasedRoutePrefix = "./data/purchased-";
-const purchasedRouteSuffix = ".json";
-
 /** POST /purchased/:account **/
 app.post("/purchased/:account", (req, res) => {
   const account = req.params.account;
@@ -664,8 +678,7 @@ app.post("/cart/submit/:account", (req, res) => {
     if (productId in purchasedItems) { // Update the purchased items
       purchasedItems[productId][0] += boughtItems[productId];
     } else {
-      purchasedItems[productId][0] = boughtItems[productId];
-      purchasedItems[productId][1] = false; // Set isComment to false
+      purchasedItems[productId] = [boughtItems[productId], false]; // Set isComment to false
     }
   }
   const writePurchased = writeJsonFile(purchasedRoute, purchasedItems, responseCreator, res);

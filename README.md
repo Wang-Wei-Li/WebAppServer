@@ -45,7 +45,7 @@ image.img
 #### /post/
 
 ##### 1.註冊:
-- /register -> accounts.json 和 personalInfos.json
+- /register -> accounts.json、personalInfos.json 和 purchased-\<account\>.json
 > request:
 ```
 {
@@ -318,5 +318,5 @@ ProductInfo
 ### 四、檔案管理：
 1. accounts.json、personalInfos.json 和 products.json 必須存在且格式正確 (可為空 Object) <br>
 2. 所有 productID in products.json 都必須有相對應的 product-\<id\>.json <br>
-3. 所有 account in accounts.json 都必須有相對應的 account in personalInfos.json 和 purchased-\<account\>.json <br>
+3. 所有 account in accounts.json 都必須有相對應的 account in personalInfos.json <br>
 4. 每日午夜手動刪除 viewcounts.json，並用前三多 counts 的 productID 手動更新 recommendations.json <br>
