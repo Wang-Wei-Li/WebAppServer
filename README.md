@@ -121,7 +121,7 @@ image.img
 ```
 {
   "password": String,
-  "products": [{id: String, amount: Int}...]
+  "products": [{id: String, amount: Int},...]
 }
 ```
 > response:

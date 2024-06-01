@@ -242,7 +242,7 @@
         async function getCart() {
             const account = document.getElementById('cartAccount').value;
             const password = document.getElementById('cartPassword').value;
-    
+            
             // POST request to view the cart
             const response = await fetch(`${baseUrl}/cart/${account}`, {
                 method: 'POST',
