@@ -55,30 +55,36 @@ const productRouteSuffix = ".json";
 app.get("/product", (req, res) => {
   const responseCreator = getResponseCreator();
 
-  let productInfos = [];
-  if (fs.existsSync(productsRoute)) {
-    const products = parseJsonFile(productsRoute, responseCreator, res);
-    if (!products) return;
-
-    const productsArray = Object.keys(products);
-    for (const productId of productsArray) {
-      let productRoute = productRoutePrefix + productId + productRouteSuffix;
-      if (fs.existsSync(productRoute)) {
-        const productInfo = parseJsonFile(productRoute, responseCreator, res);
-        if (!productInfo) return;
-        productInfos.push(productInfo);
-      } else {
-        responseCreator.setCause("Some products do not exist. Please remind backend developers.");
-
-      }
-    }
-
-    responseCreator.setIsSuccess(true);
-  } else {
+  if (!existsSync(productsRoute)) {
     responseCreator.setIsSuccess(false);
     responseCreator.setCause(`${productsRoute} does not exist.`);
+    return res.send(responseCreator.getResponse());
+  }
+
+  const products = parseJsonFile(productsRoute, responseCreator, res);
+  if (!products) return;
+
+  let missingProducts = [];
+  let productInfos = [];
+  for (const productId in products) {
+    let productRoute = productRoutePrefix + productId + productRouteSuffix;
+
+    if (!fs.existsSync(productRoute)) {
+        missingProducts.push(productId);
+        continue;
+    }
+
+    const productInfo = parseJsonFile(productRoute, responseCreator, res);
+    if (!productInfo) return;
+
+    productInfos.push(productInfo);
+  }
+
+  if (missingProducts.length > 0) {
+    responseCreator.setCause(`Missing JSON file for product id(s): ${missingProducts.join(", ")}`);
   }
   responseCreator.setProductInfos(productInfos);
+  responseCreator.setIsSuccess(true);
 
   return res.send(responseCreator.getResponse());
 });
@@ -101,25 +107,25 @@ app.get("/product/:id", (req, res) => {
   const productInfo = parseJsonFile(productRoute, responseCreator, res);
   if (!productInfo) return;
 
-  let productInfos = [];
-  productInfos.push(productInfo);
-
-  if (fs.existsSync(viewcountsRoute)) {
-    const viewcounts = parseJsonFile(viewcountsRoute, responseCreator, res);
-    if (!viewcounts) return;
-
-    if (!(productId in viewcounts)) viewcounts[productId] = 0; // initialize viewcount if productId does not exist
-
-    viewcounts[productId] += 1;
-    const writeVeiwcounts = writeJsonFile(viewcountsRoute, viewcounts, responseCreator, res);
-    if (!writeVeiwcounts) return;
-  } else { // if viewcounts.json does not exist, create it
+  if (!fs.existsSync(viewcountsRoute)) { // Create viewcounts.json if it does not exist
     const createViewcountsJson = {};
 
     createViewcountsJson[productId] = 1;
     const writeVeiwcounts = writeJsonFile(viewcountsRoute, createViewcountsJson, responseCreator, res);
     if (!writeVeiwcounts) return;
   }
+
+  const viewcounts = parseJsonFile(viewcountsRoute, responseCreator, res);
+  if (!viewcounts) return;
+
+  if (!(productId in viewcounts)) viewcounts[productId] = 0; // initialize viewcount if productId does not exist
+
+  viewcounts[productId] += 1;
+  const writeVeiwcounts = writeJsonFile(viewcountsRoute, viewcounts, responseCreator, res);
+  if (!writeVeiwcounts) return;
+
+  let productInfos = [];
+  productInfos.push(productInfo);
 
   responseCreator.setProductInfos(productInfos);
   responseCreator.setIsSuccess(true);
@@ -134,37 +140,33 @@ const recommendationsRoute = "./data/recommendations.json";
 app.get("/recommendation", (req, res) => {
   const responseCreator = getResponseCreator();
 
-  let recommendationInfos = [];
-  if (fs.existsSync(recommendationsRoute)) {
-    const recommendations = parseJsonFile(recommendationsRoute, responseCreator, res);
-    if (!recommendations) return;
-    const recommendationsArray = Object.values(recommendations);
-    let isRecommendationsValid = true;
-    for (const productId of recommendationsArray) {
-      let productRoute = productRoutePrefix + productId + productRouteSuffix;
-      if (fs.existsSync(productRoute)) {
-        const recommendationInfo = parseJsonFile(productRoute, responseCreator, res);
-        if (!recommendationInfo) return;
-        recommendationInfos.push(recommendationInfo);
-      } else {
-        responseCreator.setIsSuccess(false);
-        responseCreator.setCause(`${productRoute} does not exist.`);
-        isRecommendationsValid = false;
-        break;
-      }
-    }
-
-    if (isRecommendationsValid) {
-      responseCreator.setIsSuccess(true);
-    } else {
-      recommendationInfos = [];
-    }
-  } else {
+  if (!fs.existsSync(recommendationsRoute)) {
     responseCreator.setIsSuccess(false);
     responseCreator.setCause(`${recommendationsRoute} does not exist.`);
+    return res.send(responseCreator.getResponse());
+  }
+
+  const recommendations = parseJsonFile(recommendationsRoute, responseCreator, res);
+  if (!recommendations) return;
+
+  let recommendationInfos = [];
+  for (const productId in recommendations) {
+    let productRoute = productRoutePrefix + productId + productRouteSuffix;
+
+    if (!fs.existsSync(productRoute)) {
+      responseCreator.setIsSuccess(false);
+      responseCreator.setCause(`${productRoute} does not exist.`);
+      return res.send(responseCreator.getResponse());
+    }
+
+    const recommendationInfo = parseJsonFile(productRoute, responseCreator, res);
+    if (!recommendationInfo) return;
+
+    recommendationInfos.push(recommendationInfo);
   }
   responseCreator.setProductInfos(recommendationInfos);
-
+  responseCreator.setIsSuccess(true);
+  
   return res.send(responseCreator.getResponse());
 });
 /** GET /recommendation **/
@@ -174,31 +176,38 @@ app.get("/recommendation/:rank", (req, res) => {
   const rank = req.params.rank;
   const responseCreator = getResponseCreator();
 
-  let productInfos = [];
-  if (fs.existsSync(recommendationsRoute)) {
-    const recommendations = parseJsonFile(recommendationsRoute, responseCreator, res);
-    if (!recommendations) return;
-    if (rank in recommendations) {  // Check if the rank is a valid key in the recommendations object
-      const productId = recommendations[rank];
-      const productRoute = productRoutePrefix + productId + productRouteSuffix;
-      if (fs.existsSync(productRoute)) {
-        const productInfo = parseJsonFile(productRoute, responseCreator, res);
-        if (!productInfo) return;
-        productInfos.push(productInfo);
-        responseCreator.setIsSuccess(true);
-      } else {
-        responseCreator.setIsSuccess(false);
-        responseCreator.setCause(`${productRoute} does not exist.`);
-      }
-    } else {
-      responseCreator.setIsSuccess(false);
-      responseCreator.setCause("Invalid rank.");
-    }
-  } else {
+  if (!fs.existsSync(recommendationsRoute)) {
     responseCreator.setIsSuccess(false);
     responseCreator.setCause(`${recommendationsRoute} does not exist.`);
+    return res.send(responseCreator.getResponse());
   }
+
+  const recommendations = parseJsonFile(recommendationsRoute, responseCreator, res);
+  if (!recommendations) return;
+
+  if (!(rank in recommendations)) { // Check if the rank is a valid.
+    responseCreator.setIsSuccess(false);
+    responseCreator.setCause("Invalid rank.");
+    return res.send(responseCreator.getResponse());
+  }
+
+  const productId = recommendations[rank];
+  const productRoute = productRoutePrefix + productId + productRouteSuffix;
+
+  if (!fs.existsSync(productRoute)) {
+    responseCreator.setIsSuccess(false);
+    responseCreator.setCause(`${productRoute} does not exist.`);
+    return res.send(responseCreator.getResponse());
+  }
+
+  const productInfo = parseJsonFile(productRoute, responseCreator, res);
+  if (!productInfo) return;
+
+  let productInfos = [];
+  productInfos.push(productInfo);
+
   responseCreator.setProductInfos(productInfos);
+  responseCreator.setIsSuccess(true);
 
   return res.send(responseCreator.getResponse());
 });
@@ -213,17 +222,17 @@ app.get("/comment/:id", (req, res) => {
   const responseCreator = getResponseCreator();
   const commentRoute = commentsRoutePrefix + productId + commentsRouteSuffix;
 
-  if (fs.existsSync(commentRoute)) {
-    const comments = parseJsonFile(commentRoute, responseCreator, res);
-    if (!comments) return;
-
-    responseCreator.setComments(comments);
-    responseCreator.setIsSuccess(true);
-  } else {
+  if (!fs.existsSync(commentRoute)) {
     responseCreator.setIsSuccess(false);
     responseCreator.setCause("No comments yet.");
+    return res.send(responseCreator.getResponse());
   }
 
+  const comments = parseJsonFile(commentRoute, responseCreator, res);
+  if (!comments) return;
+
+  responseCreator.setComments(comments);
+  responseCreator.setIsSuccess(true);
 
   return res.send(responseCreator.getResponse());
 });
@@ -765,6 +774,15 @@ app.post("/comment/:account/:id", (req, res) => {
   return res.send(responseCreator.getResponse());
 });
 /** POST /comment/:account/:id **/
+
+/** Invalid Routes **/
+app.all("*", (req, res) => {
+  const responseCreator = getResponseCreator();
+  responseCreator.setIsSuccess(false);
+  responseCreator.setCause("Invalid route.");
+  res.send(responseCreator.getResponse());
+});
+/** Invalid Routes **/
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
