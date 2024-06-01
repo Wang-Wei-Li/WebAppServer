@@ -79,7 +79,8 @@ image.img
 {
   "isSuccess": Boolean,
   "personalInfos": personalInfos[account],
-  "cause": String
+  "cause": String,
+  "password": String
 }
 ```
 
@@ -193,7 +194,7 @@ image.img
   "address": String,
   "filters": [String, ...],
   "products": [{id: String, amount: Int}, ...],
-  "comment": String
+  "comment": String,
 }
 ```
 ##### response format
@@ -203,7 +204,8 @@ image.img
   "personalInfos": PersonalInfo or [PersonalInfo, ...],
   "productInfos": ProductInfo or [ProductInfo, ...],
   "cause": String,
-  "comments": [Object, ...]
+  "comments": [Object, ...],
+  "password": String
 }
 ```
 ##### ProductInfo
