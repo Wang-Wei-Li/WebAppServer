@@ -200,10 +200,11 @@ image.img
 ```
 {
   "isSuccess": Boolean,
+  "cause": String,
   "personalInfos": PersonalInfo or [PersonalInfo, ...],
   "productInfos": ProductInfo or [ProductInfo, ...],
-  "cause": String,
-  "comments": [Object, ...]
+  "comments": [Object, ...],
+  "password": String
 }
 ```
 ##### ProductInfo
@@ -215,7 +216,7 @@ image.img
   "author": String,
   "summary": String,
   "amount": Int,                   // available amount, purchased amount or amounts in cart.
-  "categories":  [String, ...],    // array
+  "categories":  [String, ...]    // array
 }
 ```
 ##### PersonalInfo
