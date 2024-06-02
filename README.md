@@ -321,3 +321,12 @@ ProductInfo
 2. 所有 productID in products.json 都必須有相對應的 product-\<id\>.json <br>
 3. 所有 account in accounts.json 都必須有相對應的 account in personalInfos.json <br>
 4. 每日午夜手動刪除 viewcounts.json，並用前三多 counts 的 productID 手動更新 recommendations.json <br>
+5. 測試用的四組帳密如下：
+```
+{
+  "Benson0918": "my818200",
+  "Alice123": "alicepwd123",
+  "JohnDoe777": "johndoe123",
+  "JaneSmith456": "janesmith456"
+}
+```
