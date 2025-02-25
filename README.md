@@ -1,5 +1,16 @@
 # WepAppServer
 
+## Project setup
+```
+npm install
+```
+
+## Run the server
+```
+npm run start
+```
+
+## Server Structure
 ### 一.請求規格
 
 #### /get/
